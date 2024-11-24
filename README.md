@@ -1,5 +1,7 @@
 # Requirements
 
+- Easy to self-host using cloudflare
+- Except for the cache, fully stateless
 - Very efficient and performant cache for LLMs
 - Easy to remove parts of cache while keeping some generations for very long
 - Parses codeblocks
@@ -11,8 +13,6 @@ I now have a nice layer that caches any LLM with URL context in a nice way.
 
 I need a good monetisable LLM setup once and for all:
 
-- clone https://github.com/CodeFromAnywhere/tool-agent
-- clone https://github.com/CodeFromAnywhere/openapi-chat-completion
 - review it all and make something cool of what I need. make it open source so others can use it too for a user+paywall on cloudflare
 
 Requirements
