@@ -24,7 +24,7 @@ export default {
         return createChatCompletion(request, env);
       }
 
-      if (request.method === "GET" && url.pathname === "/simple") {
+      if (request.method === "GET" && url.pathname === "/chat/simple") {
         return simple(request, env);
       }
 

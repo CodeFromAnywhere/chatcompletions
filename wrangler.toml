@@ -12,4 +12,4 @@ binding = "cache"
 id = "f49930cbfabf4011b370bcf16f44ffc5"
 
 [vars]
-MASTER_SECRET=abc
+MASTER_SECRET = "abc"

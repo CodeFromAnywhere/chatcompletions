@@ -1,14 +1,16 @@
 # TODO
 
 - Add master secret
-- Make `/simple` according to spec
+- Make `/completions/simple` according to spec
 - Add some grace for 429 to `/simple`. Besides using exponential backoff, use `x-ratelimit-*` headers indicating when we can use stuff again. This makes it easier to build reliable workflows.
-- Use `/simple` in filetransformers
 - Feature flag to automatically add URLs either to system prompt (for utf8) or to media (for images or other mediaformats the model supports)
+
+After it works, use it for uithub: we need an answer with `{ plan:string; extraContextNeeded:string; confidence:number; needsCodeChanges:boolean; answer: string; }` based on the relevant code. Let's make a wrapping function `simpleCompletion` that
 
 # Wishlist
 
 - Make `/chat/completions` according to spec
+- Fix website so it has the interface for `/chat/completions` but also for `/simple`
 
 # jsonGpt
 

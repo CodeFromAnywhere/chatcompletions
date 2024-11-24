@@ -15,7 +15,3 @@
 - https://github.com/codefromanywhere/openapi-chat-completion
 - https://github.com/codefromanywhere/tool-agent
 - https://github.com/codefromanywhere/chat-completion-overlay
-
-# Future plans
-
-After it works, use it for uithub: we need an answer with `{ plan:string; extraContextNeeded:string; confidence:number; needsCodeChanges:boolean; answer: string; }` based on the relevant code.

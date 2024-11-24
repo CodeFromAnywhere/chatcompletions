@@ -9,7 +9,7 @@
   },
   "servers": [{ "url": "https://chatcompletions.com" }],
   "paths": {
-    "/simple": {
+    "/chat/simple": {
       "get": {
         "summary": "Process context with LLM",
         "description": "Fetches markdown content from a URL and processes it with an LLM, with caching support",
@@ -184,7 +184,7 @@
         }
       }
     },
-    "/{cacheKey}.{ext}": {
+    "/cache/{cacheKey}.{ext}": {
       "get": {
         "summary": "Get cached content",
         "description": "Retrieves cached content by cache key and extension",
