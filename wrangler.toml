@@ -1,5 +1,5 @@
 name = "codefromanywhere_chatcompletions_main"
-main = "chatcompletions.ts"
+main = "main.ts"
 compatibility_date = "2024-10-11"
 assets = { directory= "./public" }
 
@@ -10,3 +10,6 @@ routes = [
 [[kv_namespaces]]
 binding = "cache"
 id = "f49930cbfabf4011b370bcf16f44ffc5"
+
+[vars]
+MASTER_SECRET=abc

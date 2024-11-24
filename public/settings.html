@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Completions API Settings</title>
+    <script src="https://cdn.jsdelivr.net/npm/tailwindcss-cdn@3.4.10/tailwindcss.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <div class="container mx-auto p-4 flex-grow">
+        <h1 class="text-3xl font-bold mb-4">Chat Completions API Settings</h1>
+
+        <div class="bg-white p-5 border rounded-md shadow-lg">
+            <div class="mb-4 flex justify-between items-center flex-wrap">
+                <h3 class="text-lg font-bold">Settings</h3>
+                <div class="flex items-center flex-wrap">
+                    <select id="profileSelect" class="border p-2 rounded mr-2">
+                        <option value="">Select Profile</option>
+                    </select>
+                    <button id="deleteProfileBtn" class="bg-red-500 mr-2 text-white px-4 py-2 rounded mb-2">Delete
+                        Profile</button>
+                    <button onclick="exportProfiles(true)"
+                        class="bg-blue-500 text-white px-4 py-2 rounded mr-2 mb-2">Export
+                        Profiles</button>
+                    <button onclick="exportProfiles(false)"
+                        class="bg-green-500 text-white px-4 py-2 rounded mr-2 mb-2">Publish
+                        Profiles</button>
+                    <button id="importProfilesBtn" class="bg-yellow-500 text-white px-4 mb-2 py-2 rounded">Import
+                        Profiles</button>
+
+                </div>
+            </div>
+            <div class="mb-4">
+                <label for="apiKey" class="block mb-2">API Key:</label>
+                <input type="text" id="apiKey" class="w-full border p-2 rounded">
+                <div class="text-sm">(25 requests per day free on some models)</div>
+                <div class="mt-2 text-sm">
+                    <a href="https://platform.openai.com/api-keys" target="_blank" class="text-blue-500 mr-2">OpenAI</a>
+                    <a href="https://console.anthropic.com/settings/keys" target="_blank"
+                        class="text-blue-500 mr-2">Anthropic</a>
+                    <a href="https://console.groq.com/keys" target="_blank" class="text-blue-500">Groq</a>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label for="model" class="block mb-2">Model:</label>
+                <input type="text" id="model" class="w-full border p-2 rounded mb-2">
+                <div class="flex flex-wrap gap-2">
+                    <button class="modelBtn bg-gray-200 px-2 py-1 rounded text-sm">gpt-4o-mini</button>
+                    <button class="modelBtn bg-gray-200 px-2 py-1 rounded text-sm">llama-3.1-70b-versatile</button>
+                    <button class="modelBtn bg-gray-200 px-2 py-1 rounded text-sm">claude-3-5-sonnet-20240620</button>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label for="basePath" class="block mb-2">Base Path:</label>
+                <input type="text" id="basePath" class="w-full border p-2 rounded mb-2">
+                <div class="flex flex-wrap gap-2">
+                    <button class="basePathBtn bg-gray-200 px-2 py-1 rounded text-sm">https://api.openai.com/v1</button>
+                    <button
+                        class="basePathBtn bg-gray-200 px-2 py-1 rounded text-sm">https://api.groq.com/openai/v1</button>
+                    <button
+                        class="basePathBtn bg-gray-200 px-2 py-1 rounded text-sm">https://anthropic.actionschema.com</button>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="openapiUrl" class="block mb-2">OpenAPI URL (Tools for Chat Completion):</label>
+                <input type="text" id="openapiUrl" class="w-full border p-2 rounded">
+                <div class="mt-2 text-sm">
+                    <a href="https://actionschema.com" target="_blank" class="text-blue-500 mr-2">Find one</a>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="xOpenapiSecret" class="block mb-2">OpenAPI Secret (not needed if using ActionSchema
+                    Auth):</label>
+                <input type="text" id="xOpenapiSecret" class="w-full border p-2 rounded">
+            </div>
+
+            <div class="mb-4">
+                <label for="systemPrompt" class="block mb-2">System Prompt:</label>
+                <textarea id="systemPrompt" class="w-full border p-2 rounded" rows="4"></textarea>
+            </div>
+
+            <div class="flex justify-end items-center">
+                <div>
+                    <input type="text" id="profileName" placeholder="Profile Name" class="border p-2 rounded mr-2">
+                    <button id="saveSettingsBtn" class="bg-green-500 text-white px-4 py-2 rounded">Save</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const defaultSettings = {
+            apiKey: '',
+            xOpenapiSecret: '',
+            openapiUrl: '',
+            model: 'claude-3-5-sonnet-20240620',
+            basePath: "https://anthropic.actionschema.com",
+            systemPrompt: 'Make me a vanilla HTML + TailwindCDN + CSS + JS website with the following requirements:\n\n- everything is always stored as much as possible in localStorage and editable in settings, including api keys (if needed)\n- for icons, use font awesome\n- always respond with a full new HTML page in a codeblock',
+        };
+        let settings = JSON.parse(localStorage.getItem('chatSettings')) || defaultSettings;
+        let chatProfiles = JSON.parse(localStorage.getItem('chatProfiles')) || {};
+
+        const generateRandomString = (length) => {
+            const characters = "abcdefghijklmnopqrstuvwxyz";
+            const characterArray = "x".repeat(length).split("");
+
+            const string = characterArray
+                .map(() => {
+                    const randomIndex = Math.floor(Math.random() * characters.length); //0-63 --> index for above
+                    const character = characters.charAt(randomIndex);
+                    return character;
+                })
+                .join("");
+
+            return string;
+        };
+
+        // Function to populate profile select
+        function populateProfileSelect() {
+            const profileSelect = document.getElementById('profileSelect');
+            profileSelect.innerHTML = '<option value="">Select Profile</option>';
+            for (const profileName in chatProfiles) {
+                const option = document.createElement('option');
+                option.value = profileName;
+                option.textContent = profileName;
+                if (profileName === localStorage.getItem('selectedProfile')) {
+                    option.selected = true;
+                }
+                profileSelect.appendChild(option);
+            }
+        }
+
+        // Update settings in the form
+        function updateSettingsForm() {
+            document.getElementById('apiKey').value = settings.apiKey || '';
+            document.getElementById('model').value = settings.model || '';
+            document.getElementById('basePath').value = settings.basePath || '';
+            document.getElementById('systemPrompt').value = settings.systemPrompt || '';
+            document.getElementById('xOpenapiSecret').value = settings.xOpenapiSecret || '';
+            document.getElementById('openapiUrl').value = settings.openapiUrl || '';
+        }
+
+        function saveSettings() {
+            const baseUrl = '/?';
+            const params = new URLSearchParams({
+                model: document.getElementById('model').value,
+                basePath: document.getElementById('basePath').value,
+                xOpenapiSecret: document.getElementById('xOpenapiSecret').value,
+                openapiUrl: document.getElementById('openapiUrl').value
+            });
+
+            const url = baseUrl + params.toString();
+
+            settings.apiKey = document.getElementById('apiKey').value;
+            settings.model = document.getElementById('model').value;
+            settings.basePath = document.getElementById('basePath').value;
+            settings.systemPrompt = document.getElementById('systemPrompt').value;
+            settings.xOpenapiSecret = document.getElementById('xOpenapiSecret').value;
+            settings.openapiUrl = document.getElementById('openapiUrl').value;
+
+            localStorage.setItem('chatSettings', JSON.stringify(settings));
+
+            const profileName = document.getElementById('profileName').value;
+            if (profileName) {
+                chatProfiles[profileName] = settings;
+                localStorage.setItem('chatProfiles', JSON.stringify(chatProfiles));
+                localStorage.setItem('selectedProfile', profileName);
+            }
+
+            window.location.href = url;
+        }
+
+        // Event listeners for model buttons
+        document.querySelectorAll('.modelBtn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('model').value = btn.textContent;
+            });
+        });
+
+        // Event listeners for base path buttons
+        document.querySelectorAll('.basePathBtn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('basePath').value = btn.textContent;
+            });
+        });
+
+        // Event listener for save button
+        document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
+
+        // Event listener for profile select
+        document.getElementById('profileSelect').addEventListener('change', (e) => {
+            const selectedProfile = e.target.value;
+            if (selectedProfile && chatProfiles[selectedProfile]) {
+                settings = chatProfiles[selectedProfile];
+                localStorage.setItem('chatSettings', JSON.stringify(settings));
+                localStorage.setItem('selectedProfile', selectedProfile);
+                updateSettingsForm();
+            }
+        });
+
+        // Event listener for delete profile button
+        document.getElementById('deleteProfileBtn').addEventListener('click', () => {
+            const selectedProfile = document.getElementById('profileSelect').value;
+            if (selectedProfile) {
+                delete chatProfiles[selectedProfile];
+                localStorage.setItem('chatProfiles', JSON.stringify(chatProfiles));
+                localStorage.removeItem('selectedProfile');
+                populateProfileSelect();
+                settings = defaultSettings;
+                updateSettingsForm();
+            }
+        });
+
+        const exportProfiles = async (includeCredentials) => {
+
+            const finalChatProfiles = includeCredentials ? chatProfiles : Object.keys(chatProfiles).reduce((previous, key) => {
+                const { apiKey, xOpenapiSecret, ...rest } = chatProfiles[key]
+                return { ...previous, [key]: rest }
+            }, {})
+
+
+            try {
+                const res = await fetch('https://content.actionschema.com/set', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: JSON.stringify(finalChatProfiles, undefined, 2), extension: "json", prompt: "Export the chat profiles I have", slug: generateRandomString(48) })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    window.location.href = data.contentUrl;
+                } else {
+                    console.error('Failed to publish profiles');
+                }
+            } catch (error) {
+                console.error('Error publishing profiles:', error);
+            }
+        }
+
+
+
+
+
+        // Event listener for import profiles button
+        document.getElementById('importProfilesBtn').addEventListener('click', () => {
+            const profilesUrl = prompt('Enter the URL of the profiles JSON:');
+            if (profilesUrl) {
+                window.location.href = `/?profiles=${encodeURIComponent(profilesUrl)}`;
+            }
+        });
+
+        // Initialize settings form and profile select
+        updateSettingsForm();
+        populateProfileSelect();
+
+        // Load profiles from URL if provided
+        const urlParams = new URLSearchParams(window.location.search);
+        const profilesUrl = urlParams.get('profiles');
+        if (profilesUrl) {
+            fetch(profilesUrl)
+                .then(response => response.json())
+                .then(importedProfiles => {
+                    chatProfiles = { ...chatProfiles, ...importedProfiles };
+                    localStorage.setItem('chatProfiles', JSON.stringify(chatProfiles));
+                    populateProfileSelect();
+                })
+                .catch(error => console.error('Error importing profiles:', error));
+        }
+
+
+    </script>
+</body>
+
+</html>
