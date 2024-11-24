@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@std/yaml": "npm:@jsr/std__yaml@^1.0.5"
+  }
+}

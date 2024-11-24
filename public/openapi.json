@@ -1,0 +1,293 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "LLM Context Processing API",
+    "description": "API for processing markdown context with LLM capabilities and caching",
+    "version": "1.0.0"
+  },
+  "servers": [{ "url": "https://chatcompletions.com" }],
+  "paths": {
+    "/simple": {
+      "get": {
+        "summary": "Process context with LLM",
+        "description": "Fetches markdown content from a URL and processes it with an LLM, with caching support",
+        "parameters": [
+          {
+            "name": "contextUrl",
+            "in": "query",
+            "required": true,
+            "description": "URL of the markdown context to process",
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          {
+            "name": "prompt",
+            "in": "query",
+            "required": true,
+            "description": "User prompt to process with the context",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "llmBasePath",
+            "in": "query",
+            "required": true,
+            "description": "Base path for the LLM API",
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          {
+            "name": "llmModelName",
+            "in": "query",
+            "required": true,
+            "description": "Name of the LLM model to use",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "llmApiKey",
+            "in": "query",
+            "required": true,
+            "description": "API key for LLM service",
+            "schema": {
+              "type": "string",
+              "format": "password"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response. Can be requested in multiple formats.",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Redirect URL to cached content"
+              },
+              "X-Prompt-Tokens": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Number of prompt tokens used"
+              },
+              "X-Completion-Tokens": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Number of completion tokens used"
+              },
+              "X-Cache-Hit": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Whether the response was served from cache"
+              },
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "CORS header"
+              }
+            },
+            "content": {
+              "text/markdown": {
+                "schema": {
+                  "type": "string",
+                  "description": "Processed content from the LLM. Default response for CURL"
+                }
+              },
+              "text/html": {
+                "schema": { "type": "string" },
+                "description": "User will be redirected to the cached URL"
+              },
+              "application/json": {
+                "content": { "type": "string" },
+                "codeblocks": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "ext": {
+                        "type": "string",
+                        "description": "Extension taken from codeblock start quotes (will parse things like 'typescript' to 'ts' so you can use it as file extension). If not available, if it could identify the content as a specific language while parsing, will use this extension."
+                      },
+                      "raw": { "type": "string" },
+                      "data": {
+                        "type": "object",
+                        "description": "Parsed data. Will parse JSON and YAML"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "302": {
+            "description": "Browser redirect to cached content",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Redirect URL to cached content"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing required parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Missing required parameters"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found - Cached content not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Not found"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Internal Server Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{cacheKey}.{ext}": {
+      "get": {
+        "summary": "Get cached content",
+        "description": "Retrieves cached content by cache key and extension",
+        "parameters": [
+          {
+            "name": "cacheKey",
+            "in": "path",
+            "required": true,
+            "description": "Cache key for the content",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ext",
+            "in": "path",
+            "required": true,
+            "description": "File extension (json, yaml, or md)",
+            "schema": {
+              "type": "string",
+              "enum": ["json", "yaml", "md"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "headers": {
+              "Content-Type": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Content type based on extension"
+              },
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string",
+                  "example": "*"
+                }
+              },
+              "X-Cache-Hit": {
+                "schema": {
+                  "type": "string",
+                  "example": "true"
+                }
+              },
+              "X-Prompt-Tokens": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Number of prompt tokens used"
+              },
+              "X-Completion-Tokens": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Number of completion tokens used"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/yaml": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/markdown": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found - Cached content not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Not found"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "llmApiKey": {
+        "type": "apiKey",
+        "name": "llmApiKey",
+        "in": "query",
+        "description": "API key for LLM service"
+      }
+    }
+  },
+  "security": [
+    {
+      "llmApiKey": []
+    }
+  ]
+}
