@@ -4,17 +4,15 @@
 - Make `/completions/simple` according to spec
 - Add some grace for 429 to `/simple`. Besides using exponential backoff, use `x-ratelimit-*` headers indicating when we can use stuff again. This makes it easier to build reliable workflows.
 - Feature flag to automatically add URLs either to system prompt (for utf8) or to media (for images or other mediaformats the model supports)
-
-After it works, use it for uithub: we need an answer with `{ plan:string; extraContextNeeded:string; confidence:number; needsCodeChanges:boolean; answer: string; }` based on the relevant code. Let's make a wrapping function `simpleCompletion` that
+- Ensure it also allows parsing XML in a particular way. This will be great for performance for generating code because [JSON is harder](https://aider.chat/2024/08/14/code-in-json.html)
+- Feature flag to automatically charge a user for a generation. For this, we need to use `waitUntil` to calculate the cost made and charge based on a provided configuration (chargeUrl, secret, userId)
+- In uithub, create a `GET /charge` endpoint that takes the `?apiKey&userId&promptTokens&completionTokens&llmConfig&estimatedCost` and charges the user in the way we want (custom logic).
+- After it works, use it in a simple worker `analyse-issue` that just creates `{ plan:string; extraContextNeeded:string; confidence:number; needsCodeChanges:boolean; answer: string; }` based on the relevant code. Let's make a wrapping function `paidChat` that simply calls this API
 
 # Wishlist
 
 - Make `/chat/completions` according to spec
 - Fix website so it has the interface for `/chat/completions` but also for `/simple`
-
-# jsonGpt
-
-Lets make it good and easy to debug.
 
 # Tools with instant prompt and codeblock input or output
 

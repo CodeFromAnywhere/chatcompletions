@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Completions API</title>
+    <script src="https://cdn.jsdelivr.net/npm/tailwindcss-cdn@3.4.10/tailwindcss.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #1f2937;
+        }
+
+        .logo svg {
+            height: 2rem;
+            width: 2rem;
+            margin-right: 0.5rem;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+    </style>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-M05S6XVCGF"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-M05S6XVCGF');
+    </script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+
+
+
+    <div class="container mx-auto p-4 flex-grow flex flex-col">
+        <header>
+            <div class="flex flex-row flex-wrap justify-between">
+                <a href="/" class="logo">
+                    <svg class="h-8 w-8 text-blue-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                        <path d="M10 90 L50 10 L90 90 M50 75 A5 5 0 1 1 50 85 A5 5 0 1 1 50 75" stroke="currentColor"
+                            stroke-width="8" fill="none" />
+                    </svg>
+                    <h1>ActionSchema Chat</h1>
+                </a>
+
+                <div class="mb-4 flex flex-row gap-6 items-center">
+                    <select id="profileSelect" class="bg-white border rounded px-3 py-2">
+                        <option value="">Select Profile</option>
+                    </select>
+                    <a href="settings.html" class="text-black py-2 rounded">
+                        <i class="fas fa-cog"></i>
+                    </a>
+
+                    <a href="openapi.html" target="_blank" class="text-black py-2 rounded">
+                        <i class="fa-solid fa-book"></i>
+                    </a>
+
+                    <a href="https://github.com/CodeFromAnywhere" target="_blank" class="text-black py-2 rounded">
+                        <i class="fa-brands fa-github"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="mb-4">
+            <textarea id="userPrompt" class="w-full p-2 border rounded" rows="4"
+                placeholder="Enter your message here..."></textarea>
+        </div>
+
+        <div class="mb-4 flex flex-row gap-4 items-center">
+            <button id="submitBtn" class="bg-green-500 text-white px-4 py-2 rounded">
+                <i id="submitIcon" class="fas fa-paper-plane mr-2"></i>Submit
+            </button>
+            <div class="cursor-pointer text-sm" id="systemPromptInfo">System Prompt</div>
+            <div class="cursor-pointer text-sm" id="toolInfo">Tools</div>
+        </div>
+
+        <div class="relative">
+            <textarea id="response" class="bg-white p-4 rounded shadow-md flex-grow resize-none w-full"
+                readonly></textarea>
+            <div class="absolute top-2 right-2 flex">
+                <button id="copyCodeBtn" class="hidden bg-green-500 text-white px-2 py-1 rounded text-sm mr-2">
+                    <i class="fas fa-copy mr-1"></i>Copy Code
+                </button>
+                <button id="openHostedBtn" class="hidden bg-blue-500 text-white px-2 py-1 rounded text-sm">
+                    <i class="fas fa-external-link-alt mr-1"></i>Open Hosted
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        //replaced by script
+        const data = {};
+
+
+
+        // Add these variables at the beginning of your script
+        let userHasScrolled = false;
+        let responseTextarea;
+
+        // Add this function to your existing code
+        function setupScrollBehavior() {
+            responseTextarea = document.getElementById('response');
+            responseTextarea.addEventListener('scroll', handleScroll);
+        }
+
+        function handleScroll() {
+            const { scrollTop, scrollHeight, clientHeight } = responseTextarea;
+            // Check if the user has scrolled up
+            if (scrollTop < scrollHeight - clientHeight - 10) {
+                userHasScrolled = true;
+            } else {
+                userHasScrolled = false;
+            }
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Initialize settings
+        const defaultSettings = {
+            apiKey: '',
+            model: 'gpt-4o-mini',
+            basePath: "https://api.openai.com/v1",
+            systemPrompt: 'Make me a vanilla HTML + TailwindCDN + CSS + JS website with the following requirements:\n\n- everything is always stored as much as possible in localStorage and editable in settings, including api keys (if needed)\n- for icons, use font awesome\n- always respond with a full new HTML page in a codeblock',
+            xOpenapiSecret: '',
+            openapiUrl: ''
+        };
+
+        let isLoading = false;
+        let isHosted = false;
+
+        let settings = JSON.parse(localStorage.getItem('chatSettings')) || defaultSettings;
+
+        // All queryparams will be added as settings, including remix and system. We can show them in settings too, maybe.
+        Array.from(urlParams.entries()).map(([key, value]) => settings[key] = value)
+        localStorage.setItem('chatSettings', JSON.stringify(settings));
+
+        // Initialize profiles
+        let profiles = JSON.parse(localStorage.getItem('chatProfiles')) || {};
+
+        // Populate profile select
+        function populateProfileSelect() {
+            const profileSelect = document.getElementById('profileSelect');
+
+            profileSelect.innerHTML = `<option value="">Select Profile</option>`;
+            for (const profileName in profiles) {
+                const option = document.createElement('option');
+                option.value = profileName;
+                if (profileName === localStorage.getItem("selectedProfile")) {
+                    option.selected = "true"
+                }
+                option.textContent = profileName;
+                profileSelect.appendChild(option);
+            }
+        }
+
+        populateProfileSelect();
+
+        // Event listener for profile select
+        document.getElementById('profileSelect').addEventListener('change', (e) => {
+            const selectedProfile = e.target.value;
+            if (selectedProfile && profiles[selectedProfile]) {
+                localStorage.setItem('chatSettings', JSON.stringify(profiles[selectedProfile]));
+                localStorage.setItem('selectedProfile', selectedProfile);
+                location.href = '/'
+            }
+        });
+
+        // Check for remix parameter
+        const remixUrl = urlParams.get('remix');
+        if (remixUrl) {
+            fetch(remixUrl)
+                .then(response => response.text())
+                .then(content => {
+                    document.getElementById('userPrompt').value = content;
+                })
+                .catch(error => console.error('Error fetching remix content:', error));
+        } else {
+            const userPrompt = window.sessionStorage.getItem("userPrompt");
+            if (userPrompt) {
+                document.getElementById('userPrompt').value = userPrompt
+            }
+        }
+
+
+
+        const profilesUrl = urlParams.get('profiles');
+        if (profilesUrl) {
+            fetch(profilesUrl)
+                .then(response => response.text())
+                .then(content => {
+
+                    const newProfiles = JSON.parse(content);
+                    const first = Object.keys(newProfiles)[0];
+                    localStorage.setItem('selectedProfile', first)
+                    localStorage.setItem('chatProfiles', JSON.stringify({ ...profiles, ...newProfiles }));
+
+                    window.location.href = "/"
+
+                })
+                .catch(error => console.error('Error fetching remix content:', error));
+        }
+
+        const systemUrl = urlParams.get('system');
+        if (systemUrl) {
+            fetch(systemUrl)
+                .then(response => response.text())
+                .then(systemPrompt => {
+                    // overwrite systemPrompt and set it to settings
+                    settings.systemPrompt = systemPrompt;
+
+                    localStorage.setItem('chatSettings', JSON.stringify(settings));
+                })
+                .catch(error => console.error('Error fetching system content:', error));
+        }
+
+        let hostedContentUrl = null;
+
+        // Function to stream response from API
+        async function streamResponse(userPrompt) {
+
+
+            userHasScrolled = false; // Reset scroll tracking
+            isLoading = true;
+            isHosted = false;
+            document.getElementById('submitIcon').className = "fas fa-circle-notch fa-spin mr-2"
+
+
+            const response = document.getElementById('response');
+            const copyCodeBtn = document.getElementById('copyCodeBtn');
+            const openHostedBtn = document.getElementById('openHostedBtn');
+            response.value = '';
+            copyCodeBtn.classList.add('hidden');
+            openHostedBtn.classList.add('hidden');
+            hostedContentUrl = null;
+
+            try {
+
+                const headers = new Headers({
+                    'Content-Type': 'application/json',
+                })
+
+                if (settings.apiKey && settings.apiKey.trim() !== "") {
+                    headers.append("Authorization", `Bearer ${settings.apiKey}`);
+                }
+
+                if (settings.xOpenapiSecret && settings.xOpenapiSecret.trim() !== "") {
+                    headers.append('X-OPENAPI-SECRET', settings.xOpenapiSecret);
+                }
+
+                if (settings.basePath && settings.basePath.trim() !== "") {
+                    headers.append('X-BASEPATH', settings.basePath);
+                }
+
+                const finalOpenapiUrl = data.openapiUrl || settings.openapiUrl;
+
+                const openapiPrefix = finalOpenapiUrl ? `/${encodeURIComponent(finalOpenapiUrl)}` : ""
+
+                const res = await fetch(`${openapiPrefix}/chat/completions`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        model: settings.model,
+                        messages: [
+                            { role: 'system', content: settings.systemPrompt },
+                            { role: 'user', content: userPrompt }
+                        ],
+                        stream: true
+                    })
+                });
+
+                if (res.status === 429) {
+                    alert("You have made too many requests. Please add an API key in settings");
+                    window.location.href = 'settings.html';
+                    return;
+                }
+
+
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+
+                let toolcallState = {};
+                let toolcallIds = {};
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.includes("[DONE]")) {
+                            continue;
+                        }
+
+                        if (line.startsWith('data:')) {
+                            try {
+                                const data = JSON.parse(line.slice(5));
+                                console.log(line)
+                                if (data.choices?.[0]?.delta?.content) {
+                                    response.value += data.choices[0].delta.content;
+
+                                    if (!userHasScrolled) {
+                                        response.scrollTop = response.scrollHeight;
+                                    }
+                                    checkForCodeBlocks();
+                                }
+
+
+                                const tool_calls = data.choices[0].delta.tool_calls;
+                                const tools = data.choices?.[0]?.delta?.tools;
+
+                                let n = 0;
+                                const loadingIndicators = ['🟥', '🟧', '🟨'];
+                                const doneEmoji = '🟩'
+
+                                if (tool_calls) {
+
+                                    tool_calls.map(call => {
+
+                                        if (call.function?.name) {
+                                            response.value += `\n\n⚡️ Using ${call.function.name}\n`;
+
+                                            if (!userHasScrolled) {
+                                                response.scrollTop = response.scrollHeight;
+                                            }
+                                            toolcallIds[call.index] = call.id;
+
+                                            toolcallState[call.id] = call.function.name + "(";
+
+
+                                            intervalId = setInterval(() => {
+
+                                                n++;
+
+                                                if (n > 15) {
+                                                    console.log('self closing interval after 15x')
+                                                    clearInterval(intervalId)
+                                                    return;
+                                                }
+
+                                                const emoji = n < 4 ? loadingIndicators[0] : n < 8 ? loadingIndicators[1] : loadingIndicators[2]
+
+
+                                                // buggy for now
+                                                // response.value += emoji;
+
+                                            }, 500);
+                                        }
+
+                                        if (call.function?.arguments) {
+                                            const id = toolcallIds[call.index]
+
+                                            toolcallState[id] += call.function.arguments;
+                                        }
+
+
+                                    });
+
+                                    console.log('tool_calls', tool_calls)
+                                } else if (tools) {
+
+                                    if (intervalId) {
+                                        clearInterval(intervalId)
+                                    }
+
+                                    tools.map(tool => {
+                                        toolcallState[tool.tool_call_id] += ') => ' + tool.content
+                                    })
+
+                                    console.log('tool response length', JSON.stringify(tools).length);
+
+                                    response.value += `${doneEmoji} (response size: ${JSON.stringify(tools).length} characters)\n\n\n`;
+
+                                    if (!userHasScrolled) {
+                                        response.scrollTop = response.scrollHeight;
+                                    }
+
+
+                                    console.log('tools', tools);
+
+                                }
+
+
+
+                            } catch (e) {
+                                console.log('Error parsing JSON:', e);
+                            }
+                        }
+                    }
+                }
+
+
+                if (Object.keys(toolcallState).length > 0) {
+                    response.value += "\n\nTools used:\n\n" + Object.values(toolcallState).join("\n\n")
+                }
+
+
+                document.getElementById('submitIcon').className = "fas fa-paper-plane mr-2"
+                isLoading = false;
+
+
+            } catch (error) {
+                document.getElementById('submitIcon').className = "fas fa-paper-plane mr-2"
+                isLoading = false;
+                console.error('Error:', error);
+                response.value = `Error: ${error.message}`;
+            }
+        }
+
+
+
+        // Function to check for code blocks and show/hide the buttons
+        async function checkForCodeBlocks() {
+            const response = document.getElementById('response');
+            const copyCodeBtn = document.getElementById('copyCodeBtn');
+
+            if (extractAllCodeBlocks(response.value)[0].code) {
+                copyCodeBtn.classList.remove('hidden');
+
+                if (!isHosted) {
+                    isHosted = true;
+                    console.log("hostcode only once")
+                    await hostCode();
+                }
+
+            } else {
+                copyCodeBtn.classList.add('hidden');
+            }
+        }
+
+        function extractAllCodeBlocks(text) {
+            const codeBlockRegex = /^```(\w+)?\s*\n([\s\S]*?)^```/gm;
+            const codeBlocks = [];
+            let match;
+
+            while ((match = codeBlockRegex.exec(text)) !== null) {
+                codeBlocks.push({
+                    language: match[1] || null,
+                    code: match[2].trim()
+                });
+            }
+            //minlength 1
+            return codeBlocks.length > 0 ? codeBlocks : [{ language: null, code: null }];
+        }
+
+        // Function to copy code to clipboard
+        function copyCodeToClipboard() {
+            const response = document.getElementById('response');
+            const [{ code }] = extractAllCodeBlocks(response.value);
+
+            if (code) {
+                navigator.clipboard.writeText(code).then(() => {
+                    alert('Code copied to clipboard!');
+                }).catch(err => {
+                    console.error('Failed to copy code: ', err);
+                });
+            }
+        }
+
+        // Function to host the code
+        async function hostCode() {
+            const response = document.getElementById('response');
+            const [{ code, language }] = extractAllCodeBlocks(response.value);
+            const userPrompt = document.getElementById('userPrompt').value;
+
+            if (code) {
+                try {
+                    const res = await fetch('https://content.actionschema.com/set', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', },
+                        body: JSON.stringify({
+                            code: code,
+                            prompt: userPrompt,
+                            extension: language || "html"
+                        })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        hostedContentUrl = data.contentUrl;
+                        document.getElementById('openHostedBtn').classList.remove('hidden');
+                    } else {
+                        console.error('Failed to host the code');
+                    }
+                } catch (error) {
+                    console.error('Error hosting code:', error);
+                }
+            }
+        }
+
+        function getIsLoading() {
+            return isLoading;
+        }
+
+        // Event listener for submit button
+        document.getElementById('submitBtn').addEventListener('click', async () => {
+
+            if (getIsLoading()) {
+                window.location.reload()
+                return;
+            } else {
+                const userPrompt = document.getElementById('userPrompt').value;
+                await streamResponse(userPrompt);
+            }
+        });
+
+        // Event listener for "Copy Code" button
+        document.getElementById('copyCodeBtn').addEventListener('click', copyCodeToClipboard);
+
+        // Event listener for "Open Hosted" button
+        document.getElementById('openHostedBtn').addEventListener('click', () => {
+            if (hostedContentUrl) {
+                window.open(hostedContentUrl, '_blank');
+            }
+        });
+
+        // Adjust textarea height on window resize
+        function adjustTextareaHeight() {
+            const response = document.getElementById('response');
+            const container = document.querySelector('.container');
+            const containerRect = container.getBoundingClientRect();
+            const remainingHeight = window.innerHeight - containerRect.top - 340; // 20px for bottom margin
+            response.style.height = `${remainingHeight}px`;
+        }
+
+        window.addEventListener('resize', adjustTextareaHeight);
+        adjustTextareaHeight(); // Initial adjustment
+
+        // Load default profiles if chatProfiles is empty
+        if (Object.keys(profiles).length === 0) {
+            const defaultProfilesUrl = '/settings.json';
+            fetch(defaultProfilesUrl)
+                .then(response => response.json())
+                .then(defaultProfiles => {
+                    chatProfiles = defaultProfiles;
+                    localStorage.setItem('chatProfiles', JSON.stringify(chatProfiles));
+                    if (Object.keys(defaultProfiles).length > 0) {
+                        const firstProfileName = Object.keys(defaultProfiles)[0];
+                        settings = defaultProfiles[firstProfileName];
+                        localStorage.setItem('chatSettings', JSON.stringify(settings));
+                        localStorage.setItem('selectedProfile', firstProfileName);
+                        location.reload()
+                    }
+                })
+                .catch(error => console.error('Error loading default profiles:', error));
+        }
+
+        const q = urlParams.get('q');
+        if (q) {
+            const value = decodeURIComponent(q).replaceAll("+", " ");
+
+            document.getElementById('userPrompt').value = value;
+            streamResponse(value);
+
+        }
+
+        document.getElementById("userPrompt").focus()
+        document.getElementById("userPrompt").oninput = (evt) => {
+            // keep the value in the input box when swichting, but only in this tab
+            window.sessionStorage.setItem("userPrompt", evt.target.value)
+        }
+
+        document.getElementById("systemPromptInfo").onclick = () => alert(settings.systemPrompt);
+        document.getElementById("toolInfo").onclick = () => {
+            if (settings.openapiUrl && settings.openapiUrl.trim() !== "") {
+                window.location.href = `https://www.actionschema.com/search.html?tab=reference&openapiUrl=${encodeURIComponent(settings.openapiUrl)}`
+            } else {
+                let yes = confirm("Not using any tools right now. Want to look for some tools?");
+                if (yes) {
+                    window.location.href = "https://actionschema.com"
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', setupScrollBehavior);
+
+    </script>
+</body>
+
+</html>
