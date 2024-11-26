@@ -15,6 +15,15 @@ interface URLComponents {
   ext: string; // The file extension (required)
 }
 
+const prependProtocol = (maybeFullUrl: string) => {
+  if (maybeFullUrl.startsWith("http://")) {
+    return maybeFullUrl;
+  }
+  if (maybeFullUrl.startsWith("https://")) {
+    return maybeFullUrl;
+  }
+  return "https://" + maybeFullUrl;
+};
 /**
  * Parses a URL string into its components according to the specified pattern.
  *
@@ -53,11 +62,13 @@ export function parseBasePath(pathname: string): URLComponents | null {
   ] = match;
 
   return {
-    llmBasePath,
+    llmBasePath: prependProtocol(decodeURIComponent(llmBasePath)),
     llmModelName,
-    ...(contextUrl && { contextUrl }),
+    ...(contextUrl && {
+      contextUrl: prependProtocol(decodeURIComponent(contextUrl)),
+    }),
     ...(contextJsonPointer && { contextJsonPointer }),
-    prompt,
+    prompt: decodeURIComponent(prompt),
     ...(outputJsonPointer && { outputJsonPointer }),
     ext,
   };

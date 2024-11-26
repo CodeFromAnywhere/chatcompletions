@@ -13,14 +13,13 @@ const testCases = [
     },
   },
   {
-    url: "/base/anthropic/model/claude/from/mycontext@/pointer/123/prompt/test-prompt/output.txt",
+    url: "/base/anthropic.actionschema.com/model/claude-3-5-sonnet-20241022/from/uithub.com/codefromanywhere/chatcompletions/prompt/what%20makes%20this%20api%20special/output.md",
     expected: {
-      llmBasePath: "anthropic",
-      llmModelName: "claude",
-      contextUrl: "mycontext",
-      contextJsonPointer: "/pointer/123",
-      prompt: "test-prompt",
-      ext: "txt",
+      llmBasePath: "anthropic.actionschema.com",
+      llmModelName: "claude-3-5-sonnet-20241022",
+      contextUrl: "uithub.com/codefromanywhere/chatcompletions",
+      prompt: "what%20makes%20this%20api%20special",
+      ext: "md",
     },
   },
   {

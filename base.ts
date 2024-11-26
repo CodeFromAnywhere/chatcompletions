@@ -15,46 +15,46 @@ const getSystemPrompt = async (context: {
     return { status: 200 };
   }
 
-  // Fetch markdown context
-  const contextResponse = await fetchWithTimeout(contextUrl, {
-    timeout: 60000,
-  });
-
-  if (!contextResponse.ok) {
-    return {
-      error: `Failed to fetch context: ${contextResponse.statusText}`,
-      status: contextResponse.status,
-    };
+  if (!URL.canParse(contextUrl)) {
+    return { status: 400, error: "Cannot parse url" };
   }
 
-  const markdownContext = await contextResponse.text();
+  try {
+    // Fetch markdown context
+    const contextResponse = await fetchWithTimeout(contextUrl, {
+      timeout: 60000,
+    });
 
-  const system = `${contextUrl}
+    if (!contextResponse.ok) {
+      return {
+        error: `Failed to fetch context: ${contextResponse.statusText}`,
+        status: contextResponse.status,
+      };
+    }
+
+    const markdownContext = await contextResponse.text();
+
+    const system = `${contextUrl}
 ${"-".repeat(80)}
 
 ${markdownContext}`;
 
-  if (contextJsonPointer) {
-    // TODO: JSON Pointer support
-    // 1) parse as JSON, YAML, CSV, XML or Markdown into a JS object
-    // 2) use JSON Pointer syntax to select a subset of that, if available
-    // 3) convert it to the best LLM-readable datastructure
-    return { status: 400, error: "Context JSON Pointers aren't supported yet" };
+    if (contextJsonPointer) {
+      // TODO: JSON Pointer support
+      // 1) parse as JSON, YAML, CSV, XML or Markdown into a JS object
+      // 2) use JSON Pointer syntax to select a subset of that, if available
+      // 3) convert it to the best LLM-readable datastructure
+      return {
+        status: 400,
+        error: "Context JSON Pointers aren't supported yet",
+      };
+    }
+
+    return { status: 200, system };
+  } catch (e: any) {
+    return { status: 500, error: e.message };
   }
-
-  return { status: 200, system };
 };
-
-interface LLMConfig {
-  llmBasePath: string;
-  llmModelName: string;
-  llmApiKey: string;
-}
-
-interface ContextConfig {
-  contextUrl: string;
-  prompt: string;
-}
 
 export const base = async (request: Request, env: Env) => {
   const url = new URL(request.url);
@@ -82,7 +82,11 @@ export const base = async (request: Request, env: Env) => {
 
   const isBrowser = request.headers.get("accept")?.startsWith("text/html");
 
-  if (url.searchParams.get("llmApiKey") && isBrowser) {
+  if (
+    url.searchParams.get("llmApiKey") &&
+    isBrowser &&
+    url.protocol === "https:"
+  ) {
     // in browsers redirect with a cookie so we don't have the llmApiExposed
     const setCookieValue = [
       `llmApiKey=${encodeURIComponent(llmApiKey || "")}`,
@@ -137,5 +141,7 @@ export const base = async (request: Request, env: Env) => {
   // TODO: parse LLM generation into the desired output
   // based on the JSON pointer and extension.
   // Use sensible defaults.
-  return new Response("Coming soon");
+  return new Response(JSON.stringify(result, undefined, 2), {
+    headers: { "Content-Type": "application/json" },
+  });
 };
