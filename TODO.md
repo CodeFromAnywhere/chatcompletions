@@ -1,7 +1,7 @@
 # Beautiful Simplified GET
 
 - ✅ Endpoint `chatcompletions.com/base/api.openai.com/v1/model/gpt-4o/from/[url][/@/jsonpointer]/message/summarize+this/output.[ext]` should throw in 401 for api key if there's no cache, after which it is in a cookie.
-- Create a nice JSON with popular basepaths, model names available, and where to get the API key
+- Create a nice JSON with popular basepaths, model names available, and where to get the API key.
 - `401.html` page should have a form for all input parameters (parsed from URL) and accept privacy policy and TOS
 - `base.ts` should do actual generation
 - Add some grace for 429 to `/base/*`. Besides using exponential backoff, use `x-ratelimit-*` headers indicating when we can use stuff again. This makes it easier to build reliable workflows.

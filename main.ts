@@ -1,6 +1,7 @@
 import { createChatCompletion } from "./createChatCompletion.js";
 import { base } from "./base.js";
 import { LlmGeneration, Env } from "./types.js";
+import { parseBasePath } from "./parseBasePath.js";
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -21,13 +22,17 @@ export default {
         return createChatCompletion(request, env);
       }
 
-      if (request.method === "GET" && url.pathname.startsWith("/base/")) {
+      const baseParse = parseBasePath(url.pathname);
+      if (
+        request.method === "GET" &&
+        url.pathname.startsWith("/base/") &&
+        baseParse
+      ) {
         return base(request, env);
       }
 
-      if (url.pathname.startsWith("/cache/")) {
-        const [_, __, chunk] = url.pathname.split("/");
-        const [cacheKey, ext] = chunk.split(".");
+      if (request.method === "GET" && url.pathname.startsWith("/base/")) {
+        const cacheKey = url.pathname.slice(1);
 
         // Try to get from cache
         const result = await env.cache.get<LlmGeneration>(cacheKey, {
@@ -35,7 +40,9 @@ export default {
         });
 
         if (!result) {
-          return new Response("Not found", { status: 404 });
+          return new Response(
+            "Please use the following format: /base/[llmBasePath]/model/[llmModelName]/from/[contextUrl][@jsonpointer]/prompt/[prompt]/output[@jsonpointer].[ext]",
+          );
         }
 
         const headers: { [key: string]: string } = {

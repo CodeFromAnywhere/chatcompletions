@@ -22,9 +22,12 @@ export type ChatCompletionExtraInput = {
 
 /** What is cached for any LLM generation */
 export type LlmGeneration = {
-  cacheBasePath: string;
+  requestUrl: string;
+  contextUrl?: string;
+  cacheUrl: string;
 
   llmBasePath: string;
+
   // input for /chat/completion endpoint
   input: ChatCompletionStandardInput & ChatCompletionExtraInput;
 

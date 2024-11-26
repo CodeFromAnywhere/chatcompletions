@@ -1,6 +1,15 @@
 import { CacheNamespace, LlmGeneration } from "./types.js";
 import { hashString } from "./util.js";
 
+const withoutProtocol = (url: string | undefined) =>
+  !url
+    ? ""
+    : url.startsWith("http://")
+    ? url.slice("http://".length)
+    : url.startsWith("https://")
+    ? url.slice("https://".length)
+    : url;
+
 /** 
  General purpose LLM generation function that: 
  - returns both input and output
@@ -11,6 +20,8 @@ import { hashString } from "./util.js";
 */
 export const getLlmGeneration = async (
   context: {
+    requestUrl: string;
+    contextUrl?: string;
     llmBasePath: string;
     llmApiKey?: string;
     input: LlmGeneration["input"];
@@ -19,12 +30,15 @@ export const getLlmGeneration = async (
   },
   cache: CacheNamespace,
 ): Promise<LlmGeneration | undefined> => {
-  const { llmBasePath, llmApiKey, input } = context;
+  const { llmBasePath, llmApiKey, input, contextUrl, requestUrl } = context;
+
+  const cacheKeyPrefix = `base/${withoutProtocol(llmBasePath)}/model/${
+    input.model
+  }/from/${withoutProtocol(contextUrl)}`;
 
   // Generate cache key
-  const cacheKey = (
-    await hashString(`${llmBasePath}-${JSON.stringify(input)}`)
-  ).slice(0, 16);
+  const cacheKeyHash = (await hashString(JSON.stringify(input))).slice(0, 16);
+  const cacheKey = cacheKeyPrefix + "/cache/" + cacheKeyHash;
 
   // Try to get from cache
   const cachedResult = await cache.get<LlmGeneration | undefined>(cacheKey, {
@@ -41,11 +55,13 @@ export const getLlmGeneration = async (
 
   // TODO: use LLM and store i/o
   const data = {
-    cacheBasePath: `/cache/${cacheKey}`,
-    input,
+    cacheUrl: `https://chatcompletions.com/${cacheKey}`,
+    requestUrl,
+    contextUrl,
+    status: 200,
     llmBasePath,
     output: {},
-    status: 200,
+    input,
   } satisfies LlmGeneration;
 
   // Cache the raw response

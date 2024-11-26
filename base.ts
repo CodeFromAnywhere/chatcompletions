@@ -113,6 +113,8 @@ export const base = async (request: Request, env: Env) => {
 
   const result = await getLlmGeneration(
     {
+      requestUrl: url.origin + url.pathname,
+      contextUrl,
       llmApiKey,
       llmBasePath,
       input: {
