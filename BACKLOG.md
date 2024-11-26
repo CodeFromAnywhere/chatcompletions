@@ -1,3 +1,10 @@
+## Same concept but for OpenAPI operations
+
+- URL: https://actionschema.com/[domain]/[operationId]?openapiApiKey=&contextApiKey=&contextUrl=&params...
+- Takes a JSON as context, adds other params, executes operation with that as input (via semantic operation principle) and stores result in the same way. Only difference is that here the cache mechanism works differently.
+
+IDK Though... may be not now! Maybe I SHOULD dive into this though at some point again. Especially with the JSON pointers, it's very interesting. But this may not be the best approach.
+
 # Paywall
 
 - Also add in a paywall? Maybe later

@@ -4,165 +4,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Completions - LLM API Key</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>401 - Chat Completions</title>
+    <script src="tailwind.min.js"></script>
     <style>
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0px);
-            }
-
-            50% {
-                transform: translateY(-20px);
-            }
-        }
-
-        .float-animation {
-            animation: float 6s ease-in-out infinite;
-        }
-
-        @keyframes fadeGtoU {
-
-            0%,
-            45% {
-                content: 'g';
-                opacity: 1;
-            }
-
-            50% {
-                content: 'g';
-                opacity: 0;
-            }
-
-            55%,
-            100% {
-                content: 'u';
-                opacity: 1;
-                color: purple;
-            }
-        }
-
-        .fade-g-to-u::before {
-            content: 'g';
-            animation: fadeGtoU 2s linear forwards;
+        .gradient-text {
+            background: linear-gradient(90deg, #3B82F6, #8B5CF6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
     </style>
 </head>
 
-<body class="bg-black min-h-screen flex flex-col items-center justify-center">
-    <div id="content" class="opacity-0 transform translate-y-20 transition-all duration-1000 ease-out mt-20">
-        <h1
-            class="text-8xl md:text-9xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 mb-8 text-center float-animation">
-            <span><span class="fade-g-to-u"></span>ithub</span>
-        </h1>
-        <p class="text-xl md:text-2xl text-gray-300 mb-8 text-center max-w-2xl">
-            LLM API Key
-        </p>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-16">
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-6xl font-bold mb-4 gradient-text">401 Unauthorized</h1>
+            <p class="text-xl text-gray-600 mb-8">Hold up! Time to level up your access. 🚀</p>
 
+            <form id="authForm" class="bg-white shadow-lg rounded-lg p-6 space-y-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Provider</label>
+                        <select id="provider"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="">Select a provider</option>
+                        </select>
+                    </div>
 
-        <div class="bg-gray-800 p-8 rounded-lg shadow-lg max-w-2xl w-full mx-4">
-            <pre class="mb-8 text-gray-300 text-center whitespace-pre-wrap break-words overflow-auto"></pre>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Model</label>
+                        <select id="modelSelect"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="">Select a model</option>
+                        </select>
+                        <input type="text" id="modelInput"
+                            class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            placeholder="Or enter custom model">
+                    </div>
 
-            <div class="mb-8 text-gray-300 text-center">
-                Your GitHub access token is only used to authenticate your requests and is never permanently stored in
-                our systems.
-            </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Base Path</label>
+                        <input type="text" id="basePath" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
 
-            <div class="flex flex-col space-y-6">
-                <div>
-                    <label for="saved-tokens" class="block text-gray-300 mb-2">Saved Tokens:</label>
-                    <select id="saved-tokens"
-                        class="w-full bg-gray-700 text-white rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        <option value="">Select a saved token...</option>
-                    </select>
-                </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">API Key</label>
+                        <input type="password" id="apiKey" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <a id="getKeyLink" href="#" target="_blank"
+                            class="text-sm text-indigo-600 hidden hover:text-indigo-500">Get a key for <span
+                                id="providerName"></span></a>
+                    </div>
 
-                <div class="text-center text-gray-300">- OR -</div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Context URL</label>
+                        <input type="url" id="contextUrl" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
 
-                <div>
-                    <label for="new-token" class="block text-gray-300 mb-2">New GitHub Token:</label>
-                    <div class="flex space-x-4">
-                        <input type="password" id="new-token" spellcheck="false" placeholder="Enter your GitHub token"
-                            class="flex-1 bg-gray-700 text-white rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        <a href="https://github.com/settings/tokens/new" target="_blank"
-                            class="bg-gray-600 text-white px-4 py-3 rounded-lg hover:bg-gray-500 transition-colors duration-300 flex items-center">
-                            Get New Token
-                        </a>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Prompt</label>
+                        <textarea id="prompt" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            rows="3"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Output Extension</label>
+                        <select id="ext" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="md">Markdown (.md)</option>
+                            <option value="json">JSON (.json)</option>
+                            <option value="yaml">YAML (.yaml)</option>
+                            <option value="csv">CSV (.csv)</option>
+                            <option value="xml">XML (.xml)</option>
+                            <option value="html">HTML (.html)</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input id="terms" type="checkbox" required
+                                class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="terms" class="font-medium text-gray-700">I accept the required cookies,
+                                <a href="/privacy.html" target="_blank"
+                                    class="text-indigo-600 hover:text-indigo-500">privacy policy</a>, and
+                                <a href="/tos.html" target="_blank" class="text-indigo-600 hover:text-indigo-500">terms
+                                    of service</a>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
-                <button id="submit-token"
-                    class="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 px-6 rounded-lg text-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300">
-                    Save & Continue
-                </button>
-            </div>
+                <div class="pt-4">
+                    <button type="submit"
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Submit
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
-        // Show content with animation
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                document.getElementById('content').classList.remove('opacity-0', 'translate-y-20');
-            }, 100);
+        // Parse URL parameters on load
+        const urlParams = new URLSearchParams(window.location.search);
+        const fromPath = window.location.pathname.split('/');
+        if (fromPath.includes('from')) {
+            const contextIndex = fromPath.indexOf('from') + 1;
+            const baseIndex = fromPath.indexOf('base') + 1;
+            const modelIndex = fromPath.indexOf('model') + 1;
+            const promptIndex = fromPath.indexOf('prompt') + 1;
 
-            // Load saved tokens
-            const savedTokens = JSON.parse(localStorage.getItem('githubTokens') || '{}');
-            const selectElement = document.getElementById('saved-tokens');
+            document.getElementById('contextUrl').value = fromPath[contextIndex] || '';
+            document.getElementById('basePath').value = fromPath[baseIndex] || '';
+            document.getElementById('modelInput').value = fromPath[modelIndex] || '';
+            document.getElementById('prompt').value = fromPath[promptIndex] || '';
+        }
 
-            Object.entries(savedTokens).forEach(([username, token]) => {
-                const option = document.createElement('option');
-                option.value = token;
-                option.textContent = username;
-                selectElement.appendChild(option);
-            });
+        // Fetch providers data
+        fetch('/providers.json')
+            .then(response => response.json())
+            .then(data => {
+                const providerSelect = document.getElementById('provider');
+                Object.keys(data).forEach(provider => {
+                    const option = document.createElement('option');
+                    option.value = provider;
+                    option.textContent = provider.charAt(0).toUpperCase() + provider.slice(1);
+                    providerSelect.appendChild(option);
+                });
 
-            // Handle token selection
-            selectElement.addEventListener('change', (e) => {
-                if (e.target.value) {
-                    document.getElementById('new-token').value = e.target.value;
-                }
-            });
+                // Provider change handler
+                providerSelect.addEventListener('change', () => {
+                    const provider = data[providerSelect.value];
+                    if (provider) {
+                        document.getElementById('basePath').value = provider.basePath;
 
-            // Handle form submission
-            document.getElementById('submit-token').addEventListener('click', async () => {
-                const token = document.getElementById('new-token').value;
-                if (!token) {
-                    alert('Please enter a token');
-                    return;
-                }
+                        const modelSelect = document.getElementById('modelSelect');
+                        modelSelect.innerHTML = '<option value="">Select a model</option>';
+                        provider.models.forEach(model => {
+                            const option = document.createElement('option');
+                            option.value = model.id;
+                            option.textContent = `${model.id} (${model.promptCpm}/${model.completionCpm} CPM)`;
+                            modelSelect.appendChild(option);
+                        });
 
-                try {
-                    // Verify token by getting username
-                    const response = await fetch('https://api.github.com/user', {
-                        headers: {
-                            'Authorization': `token ${token}`
-                        }
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Invalid token');
+                        // Update "Get Key" link
+                        const getKeyLink = document.getElementById('getKeyLink');
+                        const providerName = document.getElementById('providerName');
+                        getKeyLink.href = provider.apiKeyUrl;
+                        providerName.textContent = providerSelect.value;
+                        getKeyLink.classList.remove('hidden');
                     }
-
-                    const userData = await response.json();
-                    const username = userData.login;
-
-                    // Save token with username
-                    const savedTokens = JSON.parse(localStorage.getItem('githubTokens') || '{}');
-                    savedTokens[username] = token;
-                    localStorage.setItem('githubTokens', JSON.stringify(savedTokens));
-
-                    // Redirect to current URL with token
-                    const currentUrl = new URL(window.location.href);
-                    currentUrl.searchParams.set('apiKey', token);
-                    window.location.href = currentUrl.toString();
-
-                } catch (error) {
-                    alert('Invalid token. Please check and try again.');
-                }
+                });
             });
+
+        // Model selection handler
+        document.getElementById('modelSelect').addEventListener('change', function () {
+            document.getElementById('modelInput').value = this.value;
+        });
+
+        // Form submission handler
+        document.getElementById('authForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const contextUrl = encodeURIComponent(document.getElementById('contextUrl').value);
+            const basePath = encodeURIComponent(document.getElementById('basePath').value);
+            const model = encodeURIComponent(document.getElementById('modelInput').value);
+            const prompt = encodeURIComponent(document.getElementById('prompt').value);
+            const ext = document.getElementById('ext').value;
+
+            const url = `/from/${contextUrl}/base/${basePath}/model/${model}/prompt/${prompt}/output.${ext}?llmApiKey=${document.getElementById('apiKey').value}`;
+            window.location.href = url;
         });
     </script>
 </body>

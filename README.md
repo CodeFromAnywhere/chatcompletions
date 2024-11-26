@@ -1,13 +1,23 @@
+# Chat Completions
+
+> Accessible Transformations for All
+
 [OpenAPI](https://chatcompletions.com/openapi.html) | [TODO](TODO.md)
 
 # Requirements
 
+- Practically No Ratelimit
 - Easy to self-host using Cloudflare
-- Except for the cache, fully stateless
+- LLM agnostic. Except for the cache, fully stateless.
 - Very efficient and performant cache for LLMs
+- Structured output from various formats (Parses codeblocks)
+
+# Wishlist after it gets popular
+
+- Add [lifecycle with expiry](https://developers.cloudflare.com/r2/buckets/object-lifecycles/) and ensure to add a caching policy with cloudflare cache so my worker isn't even hit. Now cost is $15/TB/month.
+- Add authentication and monetisation and ensure to count amount of GB stored per user.
 - Cache cost calculation and monetisation
-- Parses codeblocks
-- Handle 429s gracefully (exponential backoff and looking at X-ratelimit headers)
+- Add endpoint to delete a range or a key.
 
 # Usage
 

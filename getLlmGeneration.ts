@@ -1,4 +1,4 @@
-import { CacheNamespace, LlmGeneration } from "./types.js";
+import { LlmGeneration } from "./types.js";
 import { hashString } from "./util.js";
 
 const withoutProtocol = (url: string | undefined) =>
@@ -28,7 +28,7 @@ export const getLlmGeneration = async (
     /** TODO: For stream */
     controller?: any;
   },
-  cache: CacheNamespace,
+  cache: Env["chatcompletions"],
 ): Promise<LlmGeneration | undefined> => {
   const { llmBasePath, llmApiKey, input, contextUrl, requestUrl } = context;
   // Generate cache key
@@ -40,12 +40,13 @@ export const getLlmGeneration = async (
   )}/model/${input.model}/cache/${cacheKeyHash}`;
 
   // Try to get from cache
-  const cachedResult = await cache.get<LlmGeneration | undefined>(cacheKey, {
-    type: "json",
-  });
+  const cachedResult = await cache.get(cacheKey);
 
-  if (cachedResult && cachedResult.status === 200) {
-    return cachedResult;
+  if (cachedResult) {
+    const json = await cachedResult.json<LlmGeneration>();
+    if (json.status === 200) {
+      return json;
+    }
   }
 
   if (!llmApiKey) {
@@ -64,17 +65,13 @@ export const getLlmGeneration = async (
   } satisfies LlmGeneration;
 
   // Cache the raw response
-  await cache.put(
-    cacheKey,
-    JSON.stringify(data),
-    // Cache for up to a month
-    {
-      expirationTtl:
-        input.cacheExpirationTtl !== undefined
-          ? input.cacheExpirationTtl
-          : 86400 * 30,
-    },
-  );
+  await cache.put(cacheKey, JSON.stringify(data));
+
+  // TODO: figure out if its possible with r2. range > expiration.
+  const expirationTtl =
+    input.cacheExpirationTtl !== undefined
+      ? input.cacheExpirationTtl
+      : 86400 * 30;
 
   return data;
 };

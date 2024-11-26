@@ -1,6 +1,10 @@
 {
   "include": ["**/*.ts"],
-  "files": ["custom.d.ts"],
+  "files": [
+    "custom.d.ts",
+    "worker-configuration.d.ts",
+    ".wrangler/types/runtime.d.ts"
+  ],
   "compilerOptions": {
     "resolveJsonModule": true,
     "module": "NodeNext",

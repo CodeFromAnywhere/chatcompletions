@@ -1,6 +1,6 @@
 import { getCookie } from "./getCookie.js";
 import { parseBasePath } from "./parseBasePath.js";
-import { CacheNamespace, Env, LlmGeneration } from "./types.js";
+import { LlmGeneration } from "./types.js";
 import { fetchWithTimeout, hashString, parseCodeBlock } from "./util.js";
 import html401 from "./public/401.html";
 import { getLlmGeneration } from "./getLlmGeneration.js";
@@ -127,7 +127,7 @@ export const base = async (request: Request, env: Env) => {
         ].filter((x) => !!x),
       },
     },
-    env.cache,
+    env.chatcompletions,
   );
 
   if (!result) {

@@ -1,10 +1,3 @@
-export interface CacheNamespace {
-  get: <T>(key: string, config?: any) => Promise<T>;
-  put: (key: string, value: any, config?: any) => Promise<void>;
-}
-
-export type Env = { cache: CacheNamespace; MASTER_SECRET: string };
-
 export type ChatCompletionStandardInput = {
   messages: { role: string; content: string }[];
   model: string;
@@ -37,3 +30,20 @@ export type LlmGeneration = {
   // output of /chat/completion endpoint (should be accumulated if stream was used)
   output: any;
 };
+/**
+ * Usage statistics for the completion request.
+ */
+export interface Usage {
+  /**
+   * Number of tokens in the generated completion.
+   */
+  completion_tokens: number;
+  /**
+   * Number of tokens in the prompt.
+   */
+  prompt_tokens: number;
+  /**
+   * Total number of tokens used in the request (prompt + completion).
+   */
+  total_tokens: number;
+}
