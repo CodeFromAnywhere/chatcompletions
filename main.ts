@@ -22,16 +22,11 @@ export default {
         return createChatCompletion(request, env);
       }
 
-      const baseParse = parseBasePath(url.pathname);
-      if (
-        request.method === "GET" &&
-        url.pathname.startsWith("/base/") &&
-        baseParse
-      ) {
+      if (request.method === "GET" && url.pathname.startsWith("/base/")) {
         return base(request, env);
       }
 
-      if (request.method === "GET" && url.pathname.startsWith("/base/")) {
+      if (request.method === "GET" && url.pathname.startsWith("/from/")) {
         const cacheKey = url.pathname.slice(1);
 
         // Try to get from cache
@@ -41,7 +36,7 @@ export default {
 
         if (!result) {
           return new Response(
-            "Please use the following format: /base/[llmBasePath]/model/[llmModelName]/from/[contextUrl][@jsonpointer]/prompt/[prompt]/output[@jsonpointer].[ext]",
+            "Please use the following format: /from/[contextUrl][@jsonpointer]/base/[llmBasePath]/model/[llmModelName]/cache/[cacheKey]",
           );
         }
 

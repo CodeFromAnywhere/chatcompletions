@@ -31,14 +31,13 @@ export const getLlmGeneration = async (
   cache: CacheNamespace,
 ): Promise<LlmGeneration | undefined> => {
   const { llmBasePath, llmApiKey, input, contextUrl, requestUrl } = context;
-
-  const cacheKeyPrefix = `base/${withoutProtocol(llmBasePath)}/model/${
-    input.model
-  }/from/${withoutProtocol(contextUrl)}`;
-
   // Generate cache key
   const cacheKeyHash = (await hashString(JSON.stringify(input))).slice(0, 16);
-  const cacheKey = cacheKeyPrefix + "/cache/" + cacheKeyHash;
+
+  // Add proper structure. NB: different from /base url structure
+  const cacheKey = `from/${withoutProtocol(contextUrl)}/base/${withoutProtocol(
+    llmBasePath,
+  )}/model/${input.model}/cache/${cacheKeyHash}`;
 
   // Try to get from cache
   const cachedResult = await cache.get<LlmGeneration | undefined>(cacheKey, {
