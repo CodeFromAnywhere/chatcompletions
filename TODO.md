@@ -1,13 +1,14 @@
 # TODO
 
-- Add master secret
 - Make `/completions/simple` according to spec
+- Endpoint `chatcompletions.com/base/api.openai.com/v1/model/gpt-4o/from/[url][/@/jsonpointer]/message/summarize+this/output.[ext]` should throw in 401 for api key if there's no cache, after which it is in a cookie. It's output defaults to Markdown or HTML but can also be made yaml or json.
 - Add some grace for 429 to `/simple`. Besides using exponential backoff, use `x-ratelimit-*` headers indicating when we can use stuff again. This makes it easier to build reliable workflows.
 - Feature flag to automatically add URLs either to system prompt (for utf8) or to media (for images or other mediaformats the model supports)
 - Ensure it also allows parsing XML in a particular way. This will be great for performance for generating code because [JSON is harder](https://aider.chat/2024/08/14/code-in-json.html)
 - Feature flag to automatically charge a user for a generation. For this, we need to use `waitUntil` to calculate the cost made and charge based on a provided configuration (chargeUrl, secret, userId)
 - In uithub, create a `GET /charge` endpoint that takes the `?apiKey&userId&promptTokens&completionTokens&llmConfig&estimatedCost` and charges the user in the way we want (custom logic).
-- After it works, use it in a simple worker `analyse-issue` that just creates `{ plan:string; extraContextNeeded:string; confidence:number; needsCodeChanges:boolean; answer: string; }` based on the relevant code. Let's make a wrapping function `paidChat` that simply calls this API
+- After it works, use it in a simple worker `analyse-issue` that just creates `{ plan:string; extraContextNeeded:string; confidence:number; needsCodeChanges:boolean; answer: string; }` based on the relevant code. Let's make a wrapping function `paidChat` that simply calls this API.
+- Endpoint `chatcompletions.com/data/[url]/@[json-pointer]/[message]` could use the datapoint found in the JSON pointer. It's a simple version of actionschema particularly for LLM queries.
 
 # Wishlist
 

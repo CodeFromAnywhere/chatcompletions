@@ -1,4 +1,4 @@
-import { Usage } from "../../public/usage";
+import { Usage } from "../types";
 
 export const chatCompletionProviders = {
   groq: {
