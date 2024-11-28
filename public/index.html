@@ -20,6 +20,7 @@
                 </div>
                 <div class="hidden md:ml-6 md:flex md:items-center md:space-x-4">
                     <a href="#features" class="text-gray-700 hover:text-gray-900 px-3 py-2">Features</a>
+                    <a href="#examples" class="text-gray-700 hover:text-gray-900 px-3 py-2">Examples</a>
                     <a href="openapi.html" class="text-gray-700 hover:text-gray-900 px-3 py-2">Docs</a>
                     <a href="https://github.com/codefromanywhere/chatcompletions"
                         class="text-gray-700 hover:text-gray-900 px-3 py-2">GitHub</a>
@@ -61,47 +62,21 @@
             </div>
         </div>
     </div>
-    <!-- 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div class="bg-gray-900 rounded-lg shadow-lg overflow-hidden">
-            <div class="px-4 py-2 bg-gray-800 border-b border-gray-700">
-                <div class="flex items-center">
-                    <div class="flex space-x-2">
-                        <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-                        <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="p-4">
-                <pre class="text-sm"><code class="language-javascript">import AI from "openai";
-const ai = new AI({
-    baseURL: "https://chatcompletions.com",
-    apiKey: "Your ChatCompletions API Key here",
-    defaultHeaders: {
-    "X-LLM-API-Key": "Your LLM API Key",
-    "X-LLM-Base-Path": "YOUR LLM Base Path",
-    },
-});
-                    
-// That's it. Now you're ready to go!
-const response = await ai.chat.completions.create({
-  messages: [{ content: "What's the meaning of life?", role: "user" }],
-  model: "gpt-4o"
-});
 
-console.log(response);
-// → The meaning of life is...</code></pre>
+    <!-- Examples Section -->
+    <div id="examples" class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-extrabold text-gray-900 text-center mb-12">Example Generations</h2>
+            <div id="examples-grid" class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                <!-- Examples will be inserted here -->
             </div>
         </div>
-    </div> -->
+    </div>
 
     <!-- Features Grid -->
     <div id="features" class="py-16 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-
-
                 <div class="relative p-6 bg-white rounded-lg border border-gray-200">
                     <div class="text-lg font-medium text-gray-900">Caching</div>
                     <p class="mt-2 text-base text-gray-500">
@@ -109,8 +84,6 @@ console.log(response);
                     </p>
                 </div>
 
-
-                <!-- Feature 5 -->
                 <div class="relative p-6 bg-white rounded-lg border border-gray-200">
                     <div class="text-lg font-medium text-gray-900">Pay Per Use</div>
                     <p class="mt-2 text-base text-gray-500">
@@ -118,7 +91,6 @@ console.log(response);
                     </p>
                 </div>
 
-                <!-- Feature 6 -->
                 <div class="relative p-6 bg-white rounded-lg border border-gray-200">
                     <div class="text-lg font-medium text-gray-900">Structured Output</div>
                     <p class="mt-2 text-base text-gray-500">
@@ -161,8 +133,45 @@ console.log(response);
     </footer>
 
     <script>
-        // Initialize Prism.js for syntax highlighting
-        Prism.highlightAll();
+        // Fetch and render examples
+        async function fetchExamples() {
+            try {
+                const response = await fetch('/examples.json');
+                const examples = await response.json();
+                const examplesGrid = document.getElementById('examples-grid');
+
+                examples.forEach(example => {
+                    const card = document.createElement('div');
+                    card.className = 'relative p-6 bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-shadow duration-300';
+
+                    card.innerHTML = `
+                        <div class="text-lg font-medium text-gray-900 mb-4">${example.title}</div>
+                        <div class="flex space-x-4">
+                            
+                            <a href="${example.codeblockUrl}" 
+                               class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                Result
+                            </a>
+
+                            <a href="${example.resultUrl}" 
+                               class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                                Info
+                            </a>
+                        </div>
+                    `;
+
+                    examplesGrid.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error fetching examples:', error);
+            }
+        }
+
+        // Initialize Prism.js and fetch examples when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            Prism.highlightAll();
+            fetchExamples();
+        });
     </script>
 </body>
 

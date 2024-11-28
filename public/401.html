@@ -203,7 +203,7 @@
             e.preventDefault();
 
             const formData = new FormData(e.target);
-            const url = `/from/${encodeURIComponent(formData.get('contextUrl'))}/base/${encodeURIComponent(formData.get('basePath'))}/model/${encodeURIComponent(formData.get('model'))}/prompt/${encodeURIComponent(formData.get('prompt'))}/codeblock.${formData.get('ext')}`;
+            const url = `/from/${encodeURIComponent(formData.get('contextUrl'))}/base/${encodeURIComponent(formData.get('basePath'))}/model/${encodeURIComponent(formData.get('model'))}/prompt/${encodeURIComponent(formData.get('prompt'))}/codeblock.${formData.get('ext')}?llmApiKey=${formData.get('apiKey')}`;
 
             window.location.href = url;
         });
