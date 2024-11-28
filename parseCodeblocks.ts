@@ -259,6 +259,14 @@ export const parseCodeblock = <T = any>(
     return { text, lang: "md" };
   }
 
+  if (
+    lang === "html" ||
+    text?.startsWith("<!DOCTYPE html>") ||
+    text?.startsWith("<html")
+  ) {
+    return { text, lang: "html" };
+  }
+
   if (lang === "json") {
     return tryParseJson(text);
   }

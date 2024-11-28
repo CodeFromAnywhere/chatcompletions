@@ -105,6 +105,7 @@ const getSystemPrompt = async (context: {
 }) => {
   const { contextJsonPointer, contextUrl } = context;
 
+  console.log({ contextUrl, contextJsonPointer });
   if (!contextUrl) {
     return { status: 200 };
   }
@@ -214,7 +215,7 @@ export const base = async (request: Request, env: Env) => {
     contextUrl,
     contextJsonPointer,
   });
-
+  console.log({ systemPrompt });
   const messages = [
     {
       role: "system",
@@ -320,7 +321,7 @@ export const outputResult = (
     ? contentTypes[ext as keyof typeof contentTypes] || "text/plain"
     : "text/plain";
 
-  if (isBrowser && !isRaw) {
+  if (isBrowser && !isRaw && outputType !== "codeblock") {
     // show the entire result in the browser in a HTML view
     // easy to navigate to content/codeblock/codeblocks
     return new Response(

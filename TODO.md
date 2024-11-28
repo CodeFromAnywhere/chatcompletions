@@ -5,11 +5,10 @@
 - ✅ Have a nice resultpage making it easy to test
 - ✅ Test and ensure it responds in desired mediatypes and caches correctly
 - ✅ Avoid having improper encoding from context retrieved.
+- ✅ tos.html and privacy.html
+- ✅ Improved 401 page with proper urldecoding
 
 # Go to production
-
-- Improved 401 page with proper urldecoding
-- tos.html and privacy.html
 
 # Improved API
 

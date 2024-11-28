@@ -76,14 +76,15 @@
                     <div>
                         <label for="contextUrl" class="block text-sm font-medium text-gray-700">Context URL</label>
                         <input type="url" id="contextUrl" name="contextUrl" required
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                            value="https://chatcompletions.com/generate-website-system-prompt.md">
                     </div>
 
                     <!-- Prompt -->
                     <div>
                         <label for="prompt" class="block text-sm font-medium text-gray-700">Prompt</label>
                         <textarea id="prompt" name="prompt" rows="3" required
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">A website with infinite scroll with catgifs using some api</textarea>
                     </div>
 
                     <!-- Extension -->
@@ -91,11 +92,11 @@
                         <label for="ext" class="block text-sm font-medium text-gray-700">Output Format</label>
                         <select id="ext" name="ext" required
                             class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md">
+                            <option value="html">HTML</option>
                             <option value="json">JSON</option>
                             <option value="yaml">YAML</option>
                             <option value="csv">CSV</option>
                             <option value="xml">XML</option>
-                            <option value="html">HTML</option>
                             <option value="md">Markdown</option>
                         </select>
                     </div>
@@ -202,7 +203,7 @@
             e.preventDefault();
 
             const formData = new FormData(e.target);
-            const url = `/from/${encodeURIComponent(formData.get('contextUrl'))}/base/${encodeURIComponent(formData.get('basePath'))}/model/${encodeURIComponent(formData.get('model'))}/prompt/${encodeURIComponent(formData.get('prompt'))}/result.${formData.get('ext')}`;
+            const url = `/from/${encodeURIComponent(formData.get('contextUrl'))}/base/${encodeURIComponent(formData.get('basePath'))}/model/${encodeURIComponent(formData.get('model'))}/prompt/${encodeURIComponent(formData.get('prompt'))}/codeblock.${formData.get('ext')}`;
 
             window.location.href = url;
         });

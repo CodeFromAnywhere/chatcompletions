@@ -1,4 +1,41 @@
 {
+  "anthropic": {
+    "basePath": "https://anthropic.actionschema.com",
+    "apiKeyUrl": "https://console.anthropic.com/settings/keys",
+    "models": [
+      {
+        "id": "claude-3-5-sonnet-20240620",
+        "promptCpm": 3.0,
+        "completionCpm": 15.0
+      },
+      {
+        "id": "claude-3-opus-20240229",
+        "promptCpm": 15.0,
+        "completionCpm": 75.0
+      },
+      {
+        "id": "claude-3-sonnet-20240229",
+        "promptCpm": 3.0,
+        "completionCpm": 15.0
+      },
+      {
+        "id": "claude-3-haiku-20240307",
+        "promptCpm": 0.25,
+        "completionCpm": 1.25
+      }
+    ]
+  },
+  "deepseek": {
+    "basePath": "https://api.deepseek.com",
+    "apiKeyUrl": "https://platform.deepseek.com/api_keys",
+    "models": [
+      {
+        "id": "deepseek-chat",
+        "promptCpm": 0.14,
+        "completionCpm": 0.28
+      }
+    ]
+  },
   "groq": {
     "basePath": "https://api.groq.com/openai/v1",
     "apiKeyUrl": "https://console.groq.com/keys",
@@ -62,43 +99,6 @@
         "completionCpm": 4.0
       },
       { "id": "gpt-3.5-turbo-0301", "promptCpm": 1.5, "completionCpm": 2.0 }
-    ]
-  },
-  "anthropic": {
-    "basePath": "https://anthropic.actionschema.com",
-    "apiKeyUrl": "https://console.anthropic.com/settings/keys",
-    "models": [
-      {
-        "id": "claude-3-5-sonnet-20240620",
-        "promptCpm": 3.0,
-        "completionCpm": 15.0
-      },
-      {
-        "id": "claude-3-opus-20240229",
-        "promptCpm": 15.0,
-        "completionCpm": 75.0
-      },
-      {
-        "id": "claude-3-sonnet-20240229",
-        "promptCpm": 3.0,
-        "completionCpm": 15.0
-      },
-      {
-        "id": "claude-3-haiku-20240307",
-        "promptCpm": 0.25,
-        "completionCpm": 1.25
-      }
-    ]
-  },
-  "deepseek": {
-    "basePath": "https://api.deepseek.com",
-    "apiKeyUrl": "https://platform.deepseek.com/api_keys",
-    "models": [
-      {
-        "id": "deepseek-chat",
-        "promptCpm": 0.14,
-        "completionCpm": 0.28
-      }
     ]
   }
 }
