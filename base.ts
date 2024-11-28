@@ -1,11 +1,31 @@
 import { getCookie } from "./getCookie.js";
-import { ChatCompletionMessage, ResultData } from "./types.js";
+import { ChatCompletionMessage, LlmGeneration, ResultData } from "./types.js";
 import { fetchWithTimeout } from "./util.js";
 import html401 from "./public/401.html";
 import resultHtml from "./public/result.html";
 import { getLlmGeneration } from "./getLlmGeneration.js";
 import { findAndParseCodeblocks } from "./parseCodeblocks.js";
 import { stringify as yamlStringify } from "@std/yaml";
+
+export const escapeHTML = (str: string) => {
+  if (typeof str !== "string") {
+    return "";
+  }
+
+  return str
+    .replace(
+      /[&<>'"]/g,
+      (tag: string) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+        }[tag] || tag),
+    )
+    .replace(/\u0000/g, "\uFFFD") // Replace null bytes
+    .replace(/\u2028/g, "\\u2028") // Line separator
+    .replace(/\u2029/g, "\\u2029"); // Paragraph separator
+};
 
 // The regex pattern that matches URLs of the format:
 // /from/[contextUrl][@jsonpointer]/base/[llmBasePath]/model/[llmModelName]/prompt/[prompt]/[outputType].[ext]
@@ -141,9 +161,9 @@ const getSystemPrompt = async (context: {
 export const base = async (request: Request, env: Env) => {
   const url = new URL(request.url);
   const context = parseBasePath(url.pathname);
-  if (!context) {
+  if (!context?.contextUrl) {
     return new Response(
-      "Please use the following format: /base/[llmBasePath]/model/[llmModelName]/from/[contextUrl][@jsonpointer]/prompt/[prompt]/output[@jsonpointer].[ext]",
+      "Please use the following format: /from/[contextUrl][@jsonpointer]/base/[llmBasePath]/model/[llmModelName]/prompt/[prompt]/result.[ext]",
     );
   }
 
@@ -162,7 +182,8 @@ export const base = async (request: Request, env: Env) => {
     request.headers.get("X-LLM-Api-Key")?.slice("Bearer ".length) ||
     getCookie(request, "llmApiKey");
 
-  const isBrowser = request.headers.get("accept")?.startsWith("text/html");
+  const isBrowser =
+    request.headers.get("accept")?.startsWith("text/html") || false;
   const isRaw = url.searchParams.get("raw") === "true";
 
   if (
@@ -229,6 +250,16 @@ export const base = async (request: Request, env: Env) => {
     return new Response("Unauthorized", { status: 401 });
   }
 
+  return outputResult(result, ext, outputType, isBrowser, isRaw);
+};
+
+export const outputResult = (
+  result: LlmGeneration,
+  ext: string,
+  outputType: string,
+  isBrowser: boolean,
+  isRaw: boolean,
+) => {
   if (!result.output) {
     return new Response(result.error, { status: result.status });
   }
@@ -295,11 +326,13 @@ export const base = async (request: Request, env: Env) => {
     return new Response(
       resultHtml.replace(
         "const data = undefined;",
-        `const data = ${JSON.stringify({
-          result,
-          outputType,
-          ext,
-        } satisfies ResultData)};`,
+        `const data = ${escapeHTML(
+          JSON.stringify({
+            result,
+            outputType,
+            ext,
+          } satisfies ResultData),
+        )};`,
       ),
       { headers: { "Content-Type": "text/html" } },
     );

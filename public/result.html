@@ -22,7 +22,7 @@
         <!-- Header -->
         <header class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900 mb-2">LLM Generation Results</h1>
-            <div class="flex gap-2">
+            <div id="links" class="flex gap-2">
                 <a href="content.md?raw=true"
                     class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Markdown</a>
                 <a href="codeblock.json?raw=true"
@@ -87,7 +87,9 @@
         function parseUrl() {
             const url = new URL(window.location.href);
             const path = url.pathname.split('/');
+            const isCache = path[1] === "cache"
             const params = {
+                isCache,
                 contextUrl: path[2] || '',
                 llmBasePath: path[4] || '',
                 llmModelName: path[6] || '',
@@ -101,6 +103,10 @@
         // Fill form with URL parameters
         function fillForm() {
             const params = parseUrl();
+            if (params.isCache) {
+                document.getElementById("urlForm").remove()
+                return;
+            }
             Object.keys(params).forEach(key => {
                 const input = document.querySelector(`[name="${key}"]`);
                 if (input) {
@@ -132,17 +138,20 @@
             const resultsDiv = document.getElementById('results');
             let html = '<div class="space-y-4">';
 
-            // Request Information
-            html += `
-                <div>
-                    <h2 class="text-xl font-semibold mb-2">Request Information</h2>
-                    <div class="bg-gray-50 p-4 rounded">
-                        <p><strong>Request URL:</strong> ${data.result.requestUrl}</p>
-                        ${data.result.contextUrl ? `<p><strong>Context URL:</strong> ${data.result.contextUrl}</p>` : ''}
-                        <p><strong>Cache URL:</strong> ${data.result.cacheUrl}</p>
-                        <p><strong>Status:</strong> ${data.result.status}</p>
-                    </div>
-                </div>`;
+
+            if (!!data.result) {
+                const links = document.getElementById("links");
+                console.log('links', links)
+                links.innerHTML = links.innerHTML + `<a href="${data.result.requestUrl}"
+                    class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Request</a>
+<a href="${data.result.contextUrl}"
+                    class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Context</a>
+<a href="${data.result.cacheUrl}"
+                    class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Cached</a>
+`;
+
+            }
+
 
             // LLM Output
             if (data.result.output) {
@@ -180,6 +189,8 @@
                             `).join('')}
                         </div>`;
                 }
+
+
 
                 html += `</div></div>`;
             }

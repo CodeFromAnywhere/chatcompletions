@@ -4,181 +4,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>401 - Chat Completions</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .gradient-text {
-            background: linear-gradient(90deg, #3B82F6, #8B5CF6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-    </style>
+    <title>401 Unauthorized - ChatCompletions</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
 </head>
 
 <body class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto px-4 py-16">
-        <div class="max-w-3xl mx-auto">
-            <h1 class="text-6xl font-bold mb-4 gradient-text">401 Unauthorized</h1>
-            <p class="text-xl text-gray-600 mb-8">Hold up! Time to level up your access. 🚀</p>
+    <!-- Navigation -->
+    <nav class="fixed w-full bg-white bg-opacity-90 backdrop-blur-sm z-50 border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="/" class="text-2xl font-bold text-gray-900">chatcompletions</a>
+                </div>
+                <div class="hidden md:ml-6 md:flex md:items-center md:space-x-4">
+                    <a href="/" class="text-gray-700 hover:text-gray-900 px-3 py-2">Home</a>
+                    <a href="/docs" class="text-gray-700 hover:text-gray-900 px-3 py-2">Docs</a>
+                    <a href="https://github.com/codefromanywhere/chatcompletions"
+                        class="text-gray-700 hover:text-gray-900 px-3 py-2">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-            <form id="authForm" class="bg-white shadow-lg rounded-lg p-6 space-y-6">
-                <div class="space-y-4">
+    <!-- Main Content -->
+    <main class="pt-24 pb-16">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Error Message -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">401 Unauthorized</h1>
+                <p class="text-lg text-gray-600">Please provide valid authentication credentials to continue.</p>
+            </div>
+
+            <!-- Form -->
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <form id="authForm" class="space-y-6">
+                    <!-- Provider Selection -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Provider</label>
-                        <select id="provider"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <label for="providerSelect" class="block text-sm font-medium text-gray-700">Provider</label>
+                        <select id="providerSelect"
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md">
                             <option value="">Select a provider</option>
                         </select>
                     </div>
 
+                    <!-- Model Selection -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Model</label>
-                        <select id="modelSelect"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            <option value="">Select a model</option>
-                        </select>
-                        <input type="text" id="modelInput"
-                            class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            placeholder="Or enter custom model">
+                        <label for="model" class="block text-sm font-medium text-gray-700">Model</label>
+                        <input type="text" id="model" name="model" required
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
 
+                    <!-- Base Path -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Base Path</label>
-                        <input type="text" id="basePath" required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <label for="basePath" class="block text-sm font-medium text-gray-700">Base Path</label>
+                        <input type="text" id="basePath" name="basePath" required
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
 
+                    <!-- API Key -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">API Key</label>
-                        <input type="password" id="apiKey" required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <label for="apiKey" class="block text-sm font-medium text-gray-700">API Key</label>
+                        <input type="password" id="apiKey" name="apiKey" required
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                         <a id="getKeyLink" href="#" target="_blank"
-                            class="text-sm text-indigo-600 hidden hover:text-indigo-500">Get a key for <span
-                                id="providerName"></span></a>
+                            class="hidden mt-2 text-sm text-indigo-600 hover:text-indigo-500">
+                            Get a key for <span id="providerName"></span>
+                        </a>
                     </div>
 
+                    <!-- Context URL -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Context URL</label>
-                        <input type="url" id="contextUrl" required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <label for="contextUrl" class="block text-sm font-medium text-gray-700">Context URL</label>
+                        <input type="url" id="contextUrl" name="contextUrl" required
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
 
+                    <!-- Prompt -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Prompt</label>
-                        <textarea id="prompt" required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            rows="3"></textarea>
+                        <label for="prompt" class="block text-sm font-medium text-gray-700">Prompt</label>
+                        <textarea id="prompt" name="prompt" rows="3" required
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></textarea>
                     </div>
 
+                    <!-- Extension -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Output Extension</label>
-                        <select id="ext" required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            <option value="md">Markdown (.md)</option>
-                            <option value="json">JSON (.json)</option>
-                            <option value="yaml">YAML (.yaml)</option>
-                            <option value="csv">CSV (.csv)</option>
-                            <option value="xml">XML (.xml)</option>
-                            <option value="html">HTML (.html)</option>
+                        <label for="ext" class="block text-sm font-medium text-gray-700">Output Format</label>
+                        <select id="ext" name="ext" required
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md">
+                            <option value="json">JSON</option>
+                            <option value="yaml">YAML</option>
+                            <option value="csv">CSV</option>
+                            <option value="xml">XML</option>
+                            <option value="html">HTML</option>
+                            <option value="md">Markdown</option>
                         </select>
                     </div>
 
-                    <div class="flex items-start">
+                    <!-- Terms Acceptance -->
+                    <div class="relative flex items-start">
                         <div class="flex items-center h-5">
-                            <input id="terms" type="checkbox" required
-                                class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                            <input id="terms" name="terms" type="checkbox" required
+                                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
                         </div>
                         <div class="ml-3 text-sm">
-                            <label for="terms" class="font-medium text-gray-700">I accept the required cookies,
-                                <a href="/privacy.html" target="_blank"
-                                    class="text-indigo-600 hover:text-indigo-500">privacy policy</a>, and
-                                <a href="/tos.html" target="_blank" class="text-indigo-600 hover:text-indigo-500">terms
-                                    of service</a>
-                            </label>
+                            <label for="terms" class="font-medium text-gray-700">I accept the</label>
+                            <a href="/tos.html" target="_blank" class="text-indigo-600 hover:text-indigo-500"> Terms of
+                                Service</a>,
+                            <a href="/privacy.html" target="_blank"
+                                class="text-indigo-600 hover:text-indigo-500">Privacy Policy</a>
+                            and required cookies
                         </div>
                     </div>
-                </div>
 
-                <div class="pt-4">
-                    <button type="submit"
-                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Submit
-                    </button>
-                </div>
-            </form>
+                    <!-- Submit Button -->
+                    <div>
+                        <button type="submit"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Continue
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
+    </main>
 
     <script>
-        // Parse URL parameters on load
-        const urlParams = new URLSearchParams(window.location.search);
-        const fromPath = window.location.pathname.split('/');
-        if (fromPath.includes('from')) {
-            const contextIndex = fromPath.indexOf('from') + 1;
-            const baseIndex = fromPath.indexOf('base') + 1;
-            const modelIndex = fromPath.indexOf('model') + 1;
-            const promptIndex = fromPath.indexOf('prompt') + 1;
+        // Fetch providers data and initialize form
+        async function initializeForm() {
+            try {
+                const response = await fetch('/providers.json');
+                const providers = await response.json();
 
-            document.getElementById('contextUrl').value = fromPath[contextIndex] || '';
-            document.getElementById('basePath').value = fromPath[baseIndex] || '';
-            document.getElementById('modelInput').value = fromPath[modelIndex] || '';
-            document.getElementById('prompt').value = fromPath[promptIndex] || '';
-        }
+                const providerSelect = document.getElementById('providerSelect');
+                const modelInput = document.getElementById('model');
+                const basePathInput = document.getElementById('basePath');
+                const getKeyLink = document.getElementById('getKeyLink');
+                const providerNameSpan = document.getElementById('providerName');
 
-        // Fetch providers data
-        fetch('/providers.json')
-            .then(response => response.json())
-            .then(data => {
-                const providerSelect = document.getElementById('provider');
-                Object.keys(data).forEach(provider => {
+                // Populate provider select
+                Object.entries(providers).forEach(([provider, data]) => {
                     const option = document.createElement('option');
                     option.value = provider;
                     option.textContent = provider.charAt(0).toUpperCase() + provider.slice(1);
                     providerSelect.appendChild(option);
                 });
 
-                // Provider change handler
-                providerSelect.addEventListener('change', () => {
-                    const provider = data[providerSelect.value];
-                    if (provider) {
-                        document.getElementById('basePath').value = provider.basePath;
+                // Handle provider selection
+                providerSelect.addEventListener('change', (e) => {
+                    const selectedProvider = providers[e.target.value];
+                    if (selectedProvider) {
+                        basePathInput.value = selectedProvider.basePath;
 
-                        const modelSelect = document.getElementById('modelSelect');
-                        modelSelect.innerHTML = '<option value="">Select a model</option>';
-                        provider.models.forEach(model => {
-                            const option = document.createElement('option');
-                            option.value = model.id;
-                            option.textContent = `${model.id} (${model.promptCpm}/${model.completionCpm} CPM)`;
-                            modelSelect.appendChild(option);
-                        });
-
-                        // Update "Get Key" link
-                        const getKeyLink = document.getElementById('getKeyLink');
-                        const providerName = document.getElementById('providerName');
-                        getKeyLink.href = provider.apiKeyUrl;
-                        providerName.textContent = providerSelect.value;
+                        // Show "Get Key" link
+                        getKeyLink.href = selectedProvider.apiKeyUrl;
+                        providerNameSpan.textContent = e.target.value;
                         getKeyLink.classList.remove('hidden');
+
+                        // Populate model datalist
+                        const modelOptions = selectedProvider.models.map(model => model.id);
+                        modelInput.value = modelOptions[0] || '';
+                    } else {
+                        basePathInput.value = '';
+                        getKeyLink.classList.add('hidden');
                     }
                 });
-            });
+            } catch (error) {
+                console.error('Error fetching providers:', error);
+            }
+        }
 
-        // Model selection handler
-        document.getElementById('modelSelect').addEventListener('change', function () {
-            document.getElementById('modelInput').value = this.value;
-        });
+        // Parse URL parameters on load
+        function parseUrlParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pathSegments = window.location.pathname.split('/');
 
-        // Form submission handler
-        document.getElementById('authForm').addEventListener('submit', function (e) {
+            // Find indices in the URL structure
+            const fromIndex = pathSegments.indexOf('from') + 1;
+            const baseIndex = pathSegments.indexOf('base') + 1;
+            const modelIndex = pathSegments.indexOf('model') + 1;
+            const promptIndex = pathSegments.indexOf('prompt') + 1;
+
+            if (fromIndex > 0) document.getElementById('contextUrl').value = decodeURIComponent(pathSegments[fromIndex]);
+            if (baseIndex > 0) document.getElementById('basePath').value = decodeURIComponent(pathSegments[baseIndex]);
+            if (modelIndex > 0) document.getElementById('model').value = decodeURIComponent(pathSegments[modelIndex]);
+            if (promptIndex > 0) document.getElementById('prompt').value = decodeURIComponent(pathSegments[promptIndex]);
+
+            // Get extension from the last segment
+            const lastSegment = pathSegments[pathSegments.length - 1];
+            if (lastSegment) {
+                const ext = lastSegment.split('.')[1];
+                if (ext) document.getElementById('ext').value = ext;
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('authForm').addEventListener('submit', (e) => {
             e.preventDefault();
 
-            const contextUrl = encodeURIComponent(document.getElementById('contextUrl').value);
-            const basePath = encodeURIComponent(document.getElementById('basePath').value);
-            const model = encodeURIComponent(document.getElementById('modelInput').value);
-            const prompt = encodeURIComponent(document.getElementById('prompt').value);
-            const ext = document.getElementById('ext').value;
+            const formData = new FormData(e.target);
+            const url = `/from/${encodeURIComponent(formData.get('contextUrl'))}/base/${encodeURIComponent(formData.get('basePath'))}/model/${encodeURIComponent(formData.get('model'))}/prompt/${encodeURIComponent(formData.get('prompt'))}/result.${formData.get('ext')}`;
 
-            const url = `/from/${contextUrl}/base/${basePath}/model/${model}/prompt/${prompt}/output.${ext}?llmApiKey=${document.getElementById('apiKey').value}`;
             window.location.href = url;
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeForm();
+            parseUrlParameters();
         });
     </script>
 </body>

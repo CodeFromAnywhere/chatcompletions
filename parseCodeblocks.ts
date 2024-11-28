@@ -255,6 +255,10 @@ export const parseCodeblock = <T = any>(
   text: string,
   lang?: string,
 ): { data?: T; error?: string; text: string; lang?: string } => {
+  if (lang === "md" || lang === "markdown") {
+    return { text, lang: "md" };
+  }
+
   if (lang === "json") {
     return tryParseJson(text);
   }

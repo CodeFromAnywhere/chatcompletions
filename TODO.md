@@ -5,13 +5,17 @@
 - ✅ Have a nice resultpage making it easy to test
 - ✅ Test and ensure it responds in desired mediatypes and caches correctly
 - ✅ Avoid having improper encoding from context retrieved.
+
+# Go to production
+
+- Improved 401 page with proper urldecoding
+- tos.html and privacy.html
+
+# Improved API
+
 - Add some grace for 429 to `/base/*`. Besides using exponential backoff, use `x-ratelimit-*` headers indicating when we can use stuff again. Max 5x retry by default
-
-# JSON Pointers
-
 - Install json-ptr that can do wildcard `*` as well
 - Parse input context with JSON pointer
-- Parse output with JSON pointer
 
 ## `POST /base` and `POST /chat/completions`
 

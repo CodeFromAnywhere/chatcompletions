@@ -1,5 +1,5 @@
 import { createChatCompletion } from "./createChatCompletion.js";
-import { base, parseBasePath } from "./base.js";
+import { base, outputResult, parseBasePath } from "./base.js";
 import { LlmGeneration } from "./types.js";
 import { calculateCost } from "./calculate-cost.js";
 
@@ -32,33 +32,36 @@ export default {
         );
       }
 
-      const context = parseBasePath(url.pathname);
-      if (request.method === "GET" && context) {
-        if (context) {
-          return base(request, env);
+      if (request.method === "GET" && url.pathname?.startsWith("/cache/")) {
+        const [, , cacheKey, outputTypeAndExt] = url.pathname.split("/");
+        const [outputType, ext] = outputTypeAndExt.split(".");
+
+        const isBrowser =
+          request.headers.get("accept")?.startsWith("text/html") || false;
+        const isRaw = url.searchParams.get("raw") === "true";
+
+        // Try to get from cache
+        const result = await env.chatcompletions.get(cacheKey);
+
+        if (!result) {
+          return new Response(
+            "Cached resource not found. Please use the following format: /from/[contextUrl][@jsonpointer]/base/[llmBasePath]/model/[llmModelName]/cache/[cacheKey]",
+            { status: 404 },
+          );
         }
-      }
-      const cacheKey = url.pathname.slice(1);
 
-      // Try to get from cache
-      const result = await env.chatcompletions.get(cacheKey);
+        const json = await result.json<LlmGeneration>();
 
-      if (!result) {
-        return new Response(
-          "Cached resource not found. Please use the following format: /from/[contextUrl][@jsonpointer]/base/[llmBasePath]/model/[llmModelName]/cache/[cacheKey]",
-          { status: 404 },
-        );
+        return outputResult(json, ext, outputType, isBrowser, isRaw);
       }
 
-      const json = await result.json<LlmGeneration>();
+      const context = parseBasePath(url.pathname);
 
-      const headers: { [key: string]: string } = {
-        "Content-Type": "application/json; charset=utf8",
-        "Access-Control-Allow-Origin": "*",
-        "X-Cache-Hit": "true",
-      };
+      if (request.method === "GET" && context) {
+        return base(request, env);
+      }
 
-      return new Response(JSON.stringify(json, undefined, 2), { headers });
+      return new Response("Method not allowed", { status: 400 });
     } catch (e) {
       console.error(e);
       return new Response("Internal Server Error", {

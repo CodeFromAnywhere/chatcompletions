@@ -34,10 +34,10 @@ export const getLlmGeneration = async (
   const { llmBasePath, llmApiKey, input, contextUrl, requestUrl } = context;
   // 1) Try to get from cache
 
-  const cacheKeyHash = (await hashString(JSON.stringify(input))).slice(0, 16);
-  const cacheKey = `from/${withoutProtocol(contextUrl)}/base/${withoutProtocol(
-    llmBasePath,
-  )}/model/${input.model}/cache/${cacheKeyHash}`;
+  const cacheKey = (await hashString(JSON.stringify(input))).slice(0, 16);
+  // const cacheKey = `from/${withoutProtocol(contextUrl)}/base/${withoutProtocol(
+  //   llmBasePath,
+  // )}/model/${input.model}/cache/${cacheKeyHash}`;
   const cachedResult = await cache.get(cacheKey);
 
   if (cachedResult) {
@@ -52,7 +52,7 @@ export const getLlmGeneration = async (
   }
 
   const output = await gracefulChatCompletion(llmBasePath, llmApiKey, input);
-  const cacheUrl = `https://chatcompletions.com/${cacheKey}`;
+  const cacheUrl = `https://chatcompletions.com/cache/${cacheKey}/content.md`;
 
   if (!output.result) {
     return {
