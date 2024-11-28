@@ -88,7 +88,10 @@ export function parseBasePath(pathname: string): URLComponents | null {
 
   return {
     ...(contextUrl && {
-      contextUrl: prependProtocol(decodeURIComponent(contextUrl)),
+      contextUrl:
+        contextUrl === "none"
+          ? "none"
+          : prependProtocol(decodeURIComponent(contextUrl)),
     }),
     ...(contextJsonPointer && { contextJsonPointer }),
     llmBasePath: prependProtocol(decodeURIComponent(llmBasePath)),
@@ -99,19 +102,37 @@ export function parseBasePath(pathname: string): URLComponents | null {
   };
 }
 
-const getSystemPrompt = async (context: {
-  contextUrl?: string;
-  contextJsonPointer?: string;
-}) => {
+const getSystemPrompt = async (
+  context: {
+    contextUrl?: string;
+    contextJsonPointer?: string;
+  },
+  env: Env,
+) => {
   const { contextJsonPointer, contextUrl } = context;
 
   console.log({ contextUrl, contextJsonPointer });
-  if (!contextUrl) {
+  if (!contextUrl || contextUrl === "none") {
     return { status: 200 };
   }
 
   if (!URL.canParse(contextUrl)) {
     return { status: 400, error: "Cannot parse url" };
+  }
+
+  if (contextUrl.startsWith("https://chatcompletions.com")) {
+    // NEEDED BECAUSE STUPID CLAUDFLAIR TRYING TO BLOCK ME FOR SECURITY REASONS. NEED TO CALL INTERNALLY
+    console.log("Doing A Loopy Thing!");
+    const response = await base(
+      new Request(contextUrl, { method: "GET" }),
+      env,
+    );
+    if (!response.ok) {
+      return { status: 400, error: "Couldn't get my own context" };
+    }
+    const c: string = await response.text();
+
+    return { status: 200, system: c };
   }
 
   try {
@@ -122,7 +143,9 @@ const getSystemPrompt = async (context: {
 
     if (!contextResponse.ok) {
       return {
-        error: `Failed to fetch context: ${contextResponse.statusText}`,
+        error: `Failed to fetch context: ${
+          contextResponse.statusText
+        }; ${await contextResponse.text()}`,
         status: contextResponse.status,
       };
     }
@@ -165,6 +188,7 @@ export const base = async (request: Request, env: Env) => {
   if (!context?.contextUrl) {
     return new Response(
       "Please use the following format: /from/[contextUrl][@jsonpointer]/base/[llmBasePath]/model/[llmModelName]/prompt/[prompt]/result.[ext]",
+      { status: 400 },
     );
   }
 
@@ -211,10 +235,18 @@ export const base = async (request: Request, env: Env) => {
     });
   }
 
-  const systemPrompt = await getSystemPrompt({
-    contextUrl,
-    contextJsonPointer,
-  });
+  const systemPrompt = await getSystemPrompt(
+    {
+      contextUrl,
+      contextJsonPointer,
+    },
+    env,
+  );
+
+  if (systemPrompt.status !== 200) {
+    return new Response(systemPrompt.error, { status: systemPrompt.status });
+  }
+
   console.log({ systemPrompt });
   const messages = [
     {
