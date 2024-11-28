@@ -20,3 +20,4 @@
 - ✅ Avoid having improper encoding from context retrieved.
 - ✅ tos.html and privacy.html
 - ✅ Improved 401 page with proper urldecoding
+- ✅ Fixed a nasty loop problem which caused us not being able to pass chatcompletions results as context... SOLVED
