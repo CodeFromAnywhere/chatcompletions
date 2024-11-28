@@ -2,15 +2,6 @@ import { ChatCompletionInput, ChatCompletionOutput } from "./types.js";
 import { LlmGeneration } from "./types.js";
 import { fetchWithTimeout, hashString } from "./util.js";
 
-const withoutProtocol = (url: string | undefined) =>
-  !url
-    ? ""
-    : url.startsWith("http://")
-    ? url.slice("http://".length)
-    : url.startsWith("https://")
-    ? url.slice("https://".length)
-    : url;
-
 /** 
  General purpose LLM generation function that: 
  - returns both input and output

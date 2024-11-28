@@ -8,13 +8,11 @@
 - ✅ tos.html and privacy.html
 - ✅ Improved 401 page with proper urldecoding
 
-# Go to production
-
 # Improved API
 
 - Add some grace for 429 to `/base/*`. Besides using exponential backoff, use `x-ratelimit-*` headers indicating when we can use stuff again. Max 5x retry by default
-- Install json-ptr that can do wildcard `*` as well
-- Parse input context with JSON pointer
+- Install json-ptr that can do wildcard `*` as well. Parse input context with JSON pointer
+- Always attach `?prompt=` to the contextUrl so if the context actually requires it, it can use it to provide improved context.
 
 ## `POST /base` and `POST /chat/completions`
 

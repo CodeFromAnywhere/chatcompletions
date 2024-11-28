@@ -10,7 +10,7 @@
     "title": "JSON with 25 popular AI company names"
   },
   {
-    "title": "A YAML with {name:string, description:string}[] with 10 famous indie hackers working on cool AI projects",
+    "title": "A YAML with famous indie hackers",
     "resultUrl": "https://chatcompletions.com/from/none/base/https%3A%2F%2Fanthropic.actionschema.com/model/claude-3-5-sonnet-20240620/prompt/A%20YAML%20with%20%7Bname%3Astring%2C%20description%3Astring%7D%5B%5D%20with%2010%20famous%20indie%20hackers%20working%20on%20cool%20AI%20projects/result.yaml",
     "codeblockUrl": "https://chatcompletions.com/from/none/base/https%3A%2F%2Fanthropic.actionschema.com/model/claude-3-5-sonnet-20240620/prompt/A%20YAML%20with%20%7Bname%3Astring%2C%20description%3Astring%7D%5B%5D%20with%2010%20famous%20indie%20hackers%20working%20on%20cool%20AI%20projects/codeblock.yaml"
   }
