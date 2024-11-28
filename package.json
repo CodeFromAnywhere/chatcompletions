@@ -1,6 +1,13 @@
 {
   "type": "module",
   "dependencies": {
-    "@std/yaml": "npm:@jsr/std__yaml@^1.0.5"
+    "@ltd/j-toml": "^1.38.0",
+    "@std/yaml": "npm:@jsr/std__yaml@^1.0.5",
+    "fast-xml-parser": "^4.5.0",
+    "marked": "^15.0.2",
+    "papaparse": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/papaparse": "^5.3.15"
   }
 }

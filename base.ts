@@ -1,9 +1,83 @@
 import { getCookie } from "./getCookie.js";
-import { parseBasePath } from "./parseBasePath.js";
-import { LlmGeneration } from "./types.js";
-import { fetchWithTimeout, hashString, parseCodeBlock } from "./util.js";
+import { ChatCompletionMessage, ResultData } from "./types.js";
+import { fetchWithTimeout } from "./util.js";
 import html401 from "./public/401.html";
+import resultHtml from "./public/result.html";
 import { getLlmGeneration } from "./getLlmGeneration.js";
+import { findAndParseCodeblocks } from "./parseCodeblocks.js";
+import { stringify as yamlStringify } from "@std/yaml";
+
+// The regex pattern that matches URLs of the format:
+// /from/[contextUrl][@jsonpointer]/base/[llmBasePath]/model/[llmModelName]/prompt/[prompt]/[outputType].[ext]
+// where the from/contextUrl part is optional and contextUrl can have optional JSON pointers
+const urlPattern =
+  /^(?:\/from\/([^@]+)(?:@(\/[^\/]+(?:\/[^\/]+)*))?)?\/base\/([^\/]+)\/model\/([^\/]+)\/prompt\/([^\/]+)\/(result|codeblock|codeblocks|content)\.([^\/]+)$/;
+
+// TypeScript interface for the captured groups
+interface URLComponents {
+  llmBasePath: string; // The base path for the LLM (required)
+  llmModelName: string; // The model name (required)
+  contextUrl?: string; // The context URL (optional)
+  contextJsonPointer?: string; // JSON pointer for the context (optional, requires contextUrl)
+  prompt: string; // The prompt string (required)
+  outputType: "result" | "codeblock" | "codeblocks" | "content"; // The output type (required)
+  ext: string; // The file extension (required)
+}
+
+const prependProtocol = (maybeFullUrl: string) => {
+  if (maybeFullUrl.startsWith("http://")) {
+    return maybeFullUrl;
+  }
+  if (maybeFullUrl.startsWith("https://")) {
+    return maybeFullUrl;
+  }
+  return "https://" + maybeFullUrl;
+};
+
+/**
+ * Parses a URL string into its components according to the specified pattern.
+ *
+ * @param url - The URL string to parse
+ * @returns URLComponents object if the URL matches the pattern, null otherwise
+ *
+ * @example
+ * // Basic usage without context
+ * parseURL('/base/anthropic/model/claude2/prompt/simple/output.txt')
+ * // → { llmBasePath: 'anthropic', llmModelName: 'claude2', prompt: 'simple', outputType: OutputType.OUTPUT, ext: 'txt' }
+ *
+ * // With context URL and its JSON pointer
+ * parseURL('/from/context@/path/to/data/base/openai/model/gpt4/prompt/test/codeblock.json')
+ * // → { llmBasePath: 'openai', llmModelName: 'gpt4', contextUrl: 'context',
+ * //     contextJsonPointer: '/path/to/data', prompt: 'test', outputType: OutputType.CODEBLOCK, ext: 'json' }
+ */
+export function parseBasePath(pathname: string): URLComponents | null {
+  const match = pathname.match(urlPattern);
+
+  if (!match) return null;
+
+  const [
+    ,
+    contextUrl,
+    contextJsonPointer,
+    llmBasePath,
+    llmModelName,
+    prompt,
+    outputType,
+    ext,
+  ] = match;
+
+  return {
+    ...(contextUrl && {
+      contextUrl: prependProtocol(decodeURIComponent(contextUrl)),
+    }),
+    ...(contextJsonPointer && { contextJsonPointer }),
+    llmBasePath: prependProtocol(decodeURIComponent(llmBasePath)),
+    llmModelName,
+    prompt: decodeURIComponent(prompt),
+    outputType: outputType as URLComponents["outputType"],
+    ext,
+  };
+}
 
 const getSystemPrompt = async (context: {
   contextUrl?: string;
@@ -32,12 +106,20 @@ const getSystemPrompt = async (context: {
       };
     }
 
+    const contentType = contextResponse.headers.get("content-type");
     const markdownContext = await contextResponse.text();
 
-    const system = `${contextUrl}
-${"-".repeat(80)}
+    if (
+      contentType?.startsWith("text/html") &&
+      markdownContext.length >= 50000
+    ) {
+      return {
+        status: 400,
+        error: "Context was HTML file that was too large (max 50kb)",
+      };
+    }
 
-${markdownContext}`;
+    const system = markdownContext;
 
     if (contextJsonPointer) {
       // TODO: JSON Pointer support
@@ -71,7 +153,7 @@ export const base = async (request: Request, env: Env) => {
     contextUrl,
     contextJsonPointer,
     prompt,
-    outputJsonPointer,
+    outputType,
     ext,
   } = context;
 
@@ -81,6 +163,7 @@ export const base = async (request: Request, env: Env) => {
     getCookie(request, "llmApiKey");
 
   const isBrowser = request.headers.get("accept")?.startsWith("text/html");
+  const isRaw = url.searchParams.get("raw") === "true";
 
   if (
     url.searchParams.get("llmApiKey") &&
@@ -111,6 +194,16 @@ export const base = async (request: Request, env: Env) => {
     contextJsonPointer,
   });
 
+  const messages = [
+    {
+      role: "system",
+      content: systemPrompt.system || "You are a helpful assistant",
+    } satisfies ChatCompletionMessage,
+    { role: "user", content: prompt } satisfies ChatCompletionMessage,
+  ];
+
+  console.log({ messages });
+
   const result = await getLlmGeneration(
     {
       requestUrl: url.origin + url.pathname,
@@ -119,12 +212,7 @@ export const base = async (request: Request, env: Env) => {
       llmBasePath,
       input: {
         model: llmModelName,
-        messages: [
-          systemPrompt.system
-            ? { role: "system", content: systemPrompt.system }
-            : undefined,
-          { role: "user", content: prompt },
-        ].filter((x) => !!x),
+        messages,
       },
     },
     env.chatcompletions,
@@ -137,13 +225,174 @@ export const base = async (request: Request, env: Env) => {
         headers: { "Content-Type": "text/html" },
       });
     }
+
     return new Response("Unauthorized", { status: 401 });
   }
 
-  // TODO: parse LLM generation into the desired output
-  // based on the JSON pointer and extension.
-  // Use sensible defaults.
-  return new Response(JSON.stringify(result, undefined, 2), {
-    headers: { "Content-Type": "application/json" },
-  });
+  if (!result.output) {
+    return new Response(result.error, { status: result.status });
+  }
+
+  const markdownString = result.output.choices?.[0]?.message?.content;
+
+  if (!markdownString) {
+    return new Response("No output content", { status: 500 });
+  }
+
+  // parse LLM generation into codeblocks
+  const codeblocks = findAndParseCodeblocks(markdownString);
+
+  // add codeblocks to output
+  result.output.codeblocks = codeblocks;
+
+  // based on the JSON pointer and extension, get the desired output
+  const contentTypes = {
+    html: "text/html",
+    json: "application/json",
+    md: "text/markdown",
+    mdx: "text/markdown",
+    yaml: "text/yaml",
+    ts: "text/plain",
+    js: "text/javascript",
+    css: "text/css",
+    xml: "text/xml",
+    svg: "image/svg+xml",
+    txt: "text/plain",
+    csv: "text/csv",
+    jsx: "text/javascript",
+    tsx: "text/plain",
+    php: "text/php",
+    py: "text/x-python",
+    rb: "text/ruby",
+    java: "text/x-java-source",
+    go: "text/x-go",
+    rs: "text/rust",
+    toml: "text/toml",
+    tex: "text/x-tex",
+    sh: "text/x-sh",
+    bash: "text/x-sh",
+    bat: "text/x-bat",
+    ps1: "text/x-powershell",
+    sql: "text/x-sql",
+    r: "text/x-r",
+    lua: "text/x-lua",
+    nim: "text/x-nim",
+    dart: "text/x-dart",
+    kt: "text/x-kotlin",
+    swift: "text/x-swift",
+    scala: "text/x-scala",
+    perl: "text/x-perl",
+    elm: "text/x-elm",
+  };
+
+  const contentType = ext
+    ? contentTypes[ext as keyof typeof contentTypes] || "text/plain"
+    : "text/plain";
+
+  if (isBrowser && !isRaw) {
+    // show the entire result in the browser in a HTML view
+    // easy to navigate to content/codeblock/codeblocks
+    return new Response(
+      resultHtml.replace(
+        "const data = undefined;",
+        `const data = ${JSON.stringify({
+          result,
+          outputType,
+          ext,
+        } satisfies ResultData)};`,
+      ),
+      { headers: { "Content-Type": "text/html" } },
+    );
+  }
+
+  if (outputType === "result") {
+    // entire input+output cache object
+    // can be in json, or yaml
+    if (ext === "yaml") {
+      return new Response(yamlStringify(result), {
+        headers: { "Content-Type": "text/yaml" },
+      });
+    }
+    if (ext === "json") {
+      return new Response(JSON.stringify(result, undefined, 2), {
+        headers: { "Content-Type": "application/json; charset=utf8" },
+      });
+    }
+    return new Response(
+      "Invalid extension. For entire result, only json or yaml are allowed",
+      { status: 400 },
+    );
+  }
+
+  if (outputType === "content") {
+    const content = result.output.choices?.[0].message.content;
+
+    if (!content) {
+      return new Response("No content found in the response", { status: 404 });
+    }
+
+    // Just md would work
+    if (ext === "md") {
+      return new Response(content, {
+        headers: { "Content-Type": "text/markdown; charset=utf8" },
+      });
+    }
+
+    return new Response("Invalid extension. For content, use content.md", {
+      status: 400,
+    });
+  }
+
+  if (outputType === "codeblock") {
+    // just the string
+    const firstBestCodeblock = codeblocks[0];
+    if (!firstBestCodeblock) {
+      return new Response("No codeblock found in the response", {
+        status: 404,
+      });
+    }
+
+    if (!firstBestCodeblock.text) {
+      return new Response(
+        firstBestCodeblock.error || "Couldn't find text of first codeblock",
+        { status: 404 },
+      );
+    }
+
+    return new Response(firstBestCodeblock.text, {
+      headers: { "Content-Type": contentType + "; charset=utf8" },
+    });
+  }
+
+  if (outputType === "codeblocks") {
+    // .json / .yaml (string[]) or .md (string)
+    if (ext === "json") {
+      return new Response(JSON.stringify(codeblocks, undefined, 2), {
+        headers: { "Content-Type": "application/json; charset=utf8" },
+      });
+    }
+    if (ext === "yaml") {
+      return new Response(yamlStringify(codeblocks), {
+        headers: { "Content-Type": "text/yaml; charset=utf8" },
+      });
+    }
+
+    if (ext === "md") {
+      return new Response(
+        codeblocks
+          .map((item) => `\`\`\`${item.lang || ""}\n${item.text}\n\`\`\`\n`)
+          .join("\n\n"),
+        {
+          headers: { "Content-Type": "text/markdown; charset=utf8" },
+        },
+      );
+    }
+
+    return new Response(
+      "Invalid extension. For codeblocks, use .json, .yaml, or .md",
+      { status: 400 },
+    );
+  }
+
+  return new Response("Invalid output-type", { status: 400 });
 };

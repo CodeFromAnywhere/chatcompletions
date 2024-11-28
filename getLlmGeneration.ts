@@ -1,5 +1,6 @@
+import { ChatCompletionInput, ChatCompletionOutput } from "./types.js";
 import { LlmGeneration } from "./types.js";
-import { hashString } from "./util.js";
+import { fetchWithTimeout, hashString } from "./util.js";
 
 const withoutProtocol = (url: string | undefined) =>
   !url
@@ -31,15 +32,12 @@ export const getLlmGeneration = async (
   cache: Env["chatcompletions"],
 ): Promise<LlmGeneration | undefined> => {
   const { llmBasePath, llmApiKey, input, contextUrl, requestUrl } = context;
-  // Generate cache key
-  const cacheKeyHash = (await hashString(JSON.stringify(input))).slice(0, 16);
+  // 1) Try to get from cache
 
-  // Add proper structure. NB: different from /base url structure
+  const cacheKeyHash = (await hashString(JSON.stringify(input))).slice(0, 16);
   const cacheKey = `from/${withoutProtocol(contextUrl)}/base/${withoutProtocol(
     llmBasePath,
   )}/model/${input.model}/cache/${cacheKeyHash}`;
-
-  // Try to get from cache
   const cachedResult = await cache.get(cacheKey);
 
   if (cachedResult) {
@@ -53,25 +51,33 @@ export const getLlmGeneration = async (
     return;
   }
 
-  // TODO: use LLM and store i/o
+  const output = await gracefulChatCompletion(llmBasePath, llmApiKey, input);
+  const cacheUrl = `https://chatcompletions.com/${cacheKey}`;
+
+  if (!output.result) {
+    return {
+      error: output.error,
+      status: output.status,
+      input,
+      requestUrl,
+      contextUrl,
+      llmBasePath,
+      cacheUrl,
+    };
+  }
+
   const data = {
-    cacheUrl: `https://chatcompletions.com/${cacheKey}`,
+    cacheUrl,
     requestUrl,
     contextUrl,
     status: 200,
     llmBasePath,
-    output: {},
+    output: output.result,
     input,
   } satisfies LlmGeneration;
 
   // Cache the raw response
   await cache.put(cacheKey, JSON.stringify(data));
-
-  // TODO: figure out if its possible with r2. range > expiration.
-  const expirationTtl =
-    input.cacheExpirationTtl !== undefined
-      ? input.cacheExpirationTtl
-      : 86400 * 30;
 
   return data;
 };
@@ -79,76 +85,50 @@ export const getLlmGeneration = async (
 /**
  * Fetches markdown content from a URL and processes it with an LLM
  */
-// async function processWithLLM(
-//   contextConfig: ContextConfig,
-//   llmConfig: LLMConfig,
-//   cache: CacheNamespace,
-// ): Promise<{
-//   cacheKey?: string;
-//   content?: string;
-//   ext?: string | null;
-//   error?: string;
-//   status: number;
-//   promptTokens?: number;
-//   completionTokens?: number;
-//   cacheHit?: boolean;
-// }> {
-//   try {
-//     // Construct the full prompt with context
+async function gracefulChatCompletion(
+  llmBasePath: string,
 
-//     // Call LLM API if not in cache
-//     const llmUrl = `${llmConfig.llmBasePath}/chat/completions`;
+  llmApiKey: string,
+  input: ChatCompletionInput,
+): Promise<{ status: number; error?: string; result?: ChatCompletionOutput }> {
+  try {
+    // Construct the full prompt with context
 
-//     const llmResponse = await fetchWithTimeout(llmUrl, {
-//       method: "POST",
-//       timeout: 180000,
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${llmConfig.llmApiKey}`,
-//       },
-//       body: JSON.stringify({
-//         model: llmConfig.llmModelName,
-//         messages: [
-//           {
-//             role: "system",
-//             content:
-//               "You are a helpful assistant that provides responses based on the given context.",
-//           },
-//           {
-//             role: "user",
-//             content: fullPrompt,
-//           },
-//         ],
-//       }),
-//     });
+    // Call LLM API if not in cache
+    const llmUrl = `${llmBasePath}/chat/completions`;
 
-//     if (!llmResponse.ok) {
-//       return {
-//         error: `LLM API call failed: ${llmResponse.statusText}`,
-//         status: llmResponse.status,
-//       };
-//     }
+    const llmResponse = await fetchWithTimeout(llmUrl, {
+      method: "POST",
+      timeout: 180000,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${llmApiKey}`,
+      },
+      body: JSON.stringify(input),
+    });
 
-//     const llmResult = await llmResponse.json();
-//     const result = llmResult.choices[0].message.content;
-//     const { content, ext } = parseCodeBlock(result);
+    if (!llmResponse.ok) {
+      return {
+        error: `LLM API call failed: ${
+          llmResponse.statusText
+        }; \n\n ${await llmResponse.text()}`,
+        status: llmResponse.status,
+      };
+    }
 
-//     return {
-//       content,
-//       cacheKey,
-//       ext,
-//       status: 200,
-//       promptTokens: llmResult.usage?.prompt_tokens,
-//       completionTokens: llmResult.usage?.completion_tokens,
-//       cacheHit: false,
-//     };
-//   } catch (error) {
-//     console.error("Error processing with LLM:", error);
-//     return {
-//       error: `Processing error: ${
-//         error instanceof Error ? error.message : "Unknown error"
-//       }`,
-//       status: 500,
-//     };
-//   }
-// }
+    const result: ChatCompletionOutput = await llmResponse.json();
+
+    return {
+      status: 200,
+      result,
+    };
+  } catch (error) {
+    console.error("Error processing with LLM:", error);
+    return {
+      error: `Processing error: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`,
+      status: 500,
+    };
+  }
+}

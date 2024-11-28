@@ -1,7 +1,6 @@
 import { createChatCompletion } from "./createChatCompletion.js";
-import { base } from "./base.js";
+import { base, parseBasePath } from "./base.js";
 import { LlmGeneration } from "./types.js";
-import { parseBasePath } from "./parseBasePath.js";
 import { calculateCost } from "./calculate-cost.js";
 
 export default {
@@ -33,34 +32,33 @@ export default {
         );
       }
 
-      if (request.method === "GET" && url.pathname.startsWith("/base/")) {
-        return base(request, env);
-      }
-
-      if (request.method === "GET" && url.pathname.startsWith("/from/")) {
-        const cacheKey = url.pathname.slice(1);
-
-        // Try to get from cache
-        const result = await env.chatcompletions.get(cacheKey);
-
-        if (!result) {
-          return new Response(
-            "Please use the following format: /from/[contextUrl][@jsonpointer]/base/[llmBasePath]/model/[llmModelName]/cache/[cacheKey]",
-          );
+      const context = parseBasePath(url.pathname);
+      if (request.method === "GET" && context) {
+        if (context) {
+          return base(request, env);
         }
+      }
+      const cacheKey = url.pathname.slice(1);
 
-        const json = await result.json<LlmGeneration>();
+      // Try to get from cache
+      const result = await env.chatcompletions.get(cacheKey);
 
-        const headers: { [key: string]: string } = {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-          "X-Cache-Hit": "true",
-        };
-
-        return new Response(JSON.stringify(json, undefined, 2), { headers });
+      if (!result) {
+        return new Response(
+          "Cached resource not found. Please use the following format: /from/[contextUrl][@jsonpointer]/base/[llmBasePath]/model/[llmModelName]/cache/[cacheKey]",
+          { status: 404 },
+        );
       }
 
-      return new Response("Not found", { status: 404 });
+      const json = await result.json<LlmGeneration>();
+
+      const headers: { [key: string]: string } = {
+        "Content-Type": "application/json; charset=utf8",
+        "Access-Control-Allow-Origin": "*",
+        "X-Cache-Hit": "true",
+      };
+
+      return new Response(JSON.stringify(json, undefined, 2), { headers });
     } catch (e) {
       console.error(e);
       return new Response("Internal Server Error", {

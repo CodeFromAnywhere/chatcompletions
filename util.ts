@@ -76,38 +76,3 @@ export async function hashString(str: string): Promise<string> {
     })
     .join("");
 }
-
-/**
- * Attempts to extract and parse the first code block from markdown content
- */
-export function parseCodeBlock(content: string): {
-  content: string;
-  ext: "json" | "yaml" | "md";
-} {
-  // Try to find code blocks with or without language specification
-  const codeBlockRegex = /```(?:\w*\n)?([\s\S]*?)```/g;
-  const matches = [...content.matchAll(codeBlockRegex)];
-
-  if (matches.length === 0) {
-    return { content, ext: "md" }; // Return full content if no code blocks found
-  }
-
-  const firstBlock = matches[0][1].trim();
-
-  // Try parsing as JSON first
-  try {
-    return {
-      content: JSON.stringify(JSON.parse(firstBlock), null, 2),
-      ext: "json",
-    };
-  } catch (e) {
-    // If JSON parsing fails, try YAML
-    try {
-      const yamlResult = parseYaml(firstBlock);
-      return { content: stringifyYaml(yamlResult), ext: "yaml" };
-    } catch (e) {
-      // If both parsing attempts fail, return the raw code block
-      return { content: firstBlock, ext: "md" };
-    }
-  }
-}

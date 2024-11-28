@@ -9,6 +9,442 @@
   },
   "servers": [{ "url": "https://chatcompletions.com" }],
   "paths": {
+    "/from/{contextUrl}/base/{llmBasePath}/model/{llmModelName}/prompt/{prompt}/{outputType}.{ext}": {
+      "get": {
+        "summary": "Generate LLM completion",
+        "description": "Generates completions from LLMs with optional context and different output formats. The response content-type is determined by:\n\n1. Browser requests (Accept: text/html)\n   - Returns text/html unless raw=true\n\n2. outputType parameter:\n   - result: Only allows json or yaml extension\n   - content: Only allows md extension (returns text/markdown)\n   - codeblock: Returns content-type based on extension mapping:\n     - .js, .jsx -> text/javascript\n     - .ts, .tsx -> text/plain\n     - .css -> text/css\n     - .py -> text/x-python\n     - .java -> text/x-java-source\n     - .go -> text/x-go\n     - .rs -> text/rust\n     - .php -> text/php\n     - .rb -> text/ruby\n     - .r -> text/x-r\n     - .lua -> text/x-lua\n     - .swift -> text/x-swift\n     - .kt -> text/x-kotlin\n     - .scala -> text/x-scala\n     - .perl -> text/x-perl\n     - .sh, .bash -> text/x-sh\n     - .bat -> text/x-bat\n     - .ps1 -> text/x-powershell\n     - .sql -> text/x-sql\n     - .toml -> text/toml\n     - .tex -> text/x-tex\n     - .xml -> text/xml\n     - .csv -> text/csv\n     - Other extensions default to text/plain\n   - codeblocks: Allows json, yaml, or md extensions\n\n3. ext parameter:\n   Maps to specific content-types:\n   - html -> text/html\n   - json -> application/json\n   - md/mdx -> text/markdown\n   - yaml -> text/yaml\n   - js/jsx -> text/javascript\n   - css -> text/css\n   - svg -> image/svg+xml\n   - py -> text/x-python\n   etc.",
+        "parameters": [
+          {
+            "name": "contextUrl",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Context URL or Context URL with JSON Pointer appended after @ (e.g. URL@/data/items)"
+            }
+          },
+          {
+            "name": "llmBasePath",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Base path for the LLM service"
+            }
+          },
+          {
+            "name": "llmModelName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Name of the LLM model to use"
+            }
+          },
+          {
+            "name": "prompt",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The prompt for the LLM"
+            }
+          },
+          {
+            "name": "outputType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["result", "codeblock", "codeblocks", "content"],
+              "description": "Type of output requested"
+            }
+          },
+          {
+            "name": "ext",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["json", "yaml", "md", "html", "txt", "svg"],
+              "description": "Output file extension"
+            }
+          },
+          {
+            "name": "llmApiKey",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "API key for LLM service"
+            }
+          },
+          {
+            "name": "raw",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Whether to return raw output"
+            }
+          },
+          {
+            "name": "X-LLM-Api-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "API key for LLM service (alternative to query parameter)"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string",
+                  "description": "HTML response when browser requests and raw=false"
+                }
+              },
+              "text/markdown": {
+                "schema": {
+                  "type": "string",
+                  "description": "Raw markdown content when outputType=content or outputType=codeblocks with ext=md"
+                }
+              },
+              "text/yaml": {
+                "schema": {
+                  "type": "string",
+                  "description": "YAML formatted output when ext=yaml and outputType=result or codeblocks"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "Plain text response for single codeblock outputs with various extensions"
+                }
+              },
+              "image/svg+xml": {
+                "schema": {
+                  "type": "string",
+                  "description": "SVG output when ext=svg"
+                }
+              },
+              "text/javascript": {
+                "schema": {
+                  "type": "string",
+                  "description": "JavaScript code when ext=js or jsx"
+                }
+              },
+              "text/css": {
+                "schema": {
+                  "type": "string",
+                  "description": "CSS code when ext=css"
+                }
+              },
+              "text/x-python": {
+                "schema": {
+                  "type": "string",
+                  "description": "Python code when ext=py"
+                }
+              },
+              "text/x-java-source": {
+                "schema": {
+                  "type": "string",
+                  "description": "Java source code when ext=java"
+                }
+              },
+              "text/x-go": {
+                "schema": {
+                  "type": "string",
+                  "description": "Go code when ext=go"
+                }
+              },
+              "text/rust": {
+                "schema": {
+                  "type": "string",
+                  "description": "Rust code when ext=rs"
+                }
+              },
+              "text/x-r": {
+                "schema": {
+                  "type": "string",
+                  "description": "R code when ext=r"
+                }
+              },
+              "text/x-lua": {
+                "schema": {
+                  "type": "string",
+                  "description": "Lua code when ext=lua"
+                }
+              },
+              "text/x-swift": {
+                "schema": {
+                  "type": "string",
+                  "description": "Swift code when ext=swift"
+                }
+              },
+              "text/x-kotlin": {
+                "schema": {
+                  "type": "string",
+                  "description": "Kotlin code when ext=kt"
+                }
+              },
+              "text/x-scala": {
+                "schema": {
+                  "type": "string",
+                  "description": "Scala code when ext=scala"
+                }
+              },
+              "text/x-perl": {
+                "schema": {
+                  "type": "string",
+                  "description": "Perl code when ext=perl"
+                }
+              },
+              "text/x-sh": {
+                "schema": {
+                  "type": "string",
+                  "description": "Shell scripts when ext=sh or bash"
+                }
+              },
+              "text/x-bat": {
+                "schema": {
+                  "type": "string",
+                  "description": "Batch scripts when ext=bat"
+                }
+              },
+              "text/x-powershell": {
+                "schema": {
+                  "type": "string",
+                  "description": "PowerShell scripts when ext=ps1"
+                }
+              },
+              "text/x-sql": {
+                "schema": {
+                  "type": "string",
+                  "description": "SQL code when ext=sql"
+                }
+              },
+              "text/toml": {
+                "schema": {
+                  "type": "string",
+                  "description": "TOML content when ext=toml"
+                }
+              },
+              "text/x-tex": {
+                "schema": {
+                  "type": "string",
+                  "description": "TeX content when ext=tex"
+                }
+              },
+              "text/php": {
+                "schema": {
+                  "type": "string",
+                  "description": "PHP code when ext=php"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "string",
+                  "description": "XML content when ext=xml"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "description": "CSV content when ext=csv"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "requestUrl": {
+                      "type": "string"
+                    },
+                    "contextUrl": {
+                      "type": "string"
+                    },
+                    "cacheUrl": {
+                      "type": "string"
+                    },
+                    "llmBasePath": {
+                      "type": "string"
+                    },
+                    "input": {
+                      "type": "object",
+                      "properties": {
+                        "messages": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "content": {
+                                "oneOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "type": {
+                                          "type": "string",
+                                          "enum": ["text", "image_url"]
+                                        },
+                                        "text": {
+                                          "type": "string"
+                                        },
+                                        "image_url": {
+                                          "type": "object",
+                                          "properties": {
+                                            "url": {
+                                              "type": "string"
+                                            },
+                                            "detail": {
+                                              "type": "string",
+                                              "enum": ["auto", "low", "high"]
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              "role": {
+                                "type": "string",
+                                "enum": [
+                                  "system",
+                                  "user",
+                                  "assistant",
+                                  "tool",
+                                  "function"
+                                ]
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["content", "role"]
+                          }
+                        },
+                        "model": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["messages", "model"]
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "output": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "choices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "finish_reason": {
+                                "type": "string",
+                                "enum": [
+                                  "stop",
+                                  "length",
+                                  "tool_calls",
+                                  "content_filter",
+                                  "function_call"
+                                ]
+                              },
+                              "index": {
+                                "type": "integer"
+                              },
+                              "message": {
+                                "type": "object",
+                                "properties": {
+                                  "content": {
+                                    "type": "string"
+                                  },
+                                  "role": {
+                                    "type": "string",
+                                    "enum": ["assistant"]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "created": {
+                          "type": "integer"
+                        },
+                        "model": {
+                          "type": "string"
+                        },
+                        "usage": {
+                          "type": "object",
+                          "properties": {
+                            "completion_tokens": {
+                              "type": "integer"
+                            },
+                            "prompt_tokens": {
+                              "type": "integer"
+                            },
+                            "total_tokens": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "codeblocks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "data": {
+                                "type": "object"
+                              },
+                              "text": {
+                                "type": "string"
+                              },
+                              "lang": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["requestUrl", "llmBasePath", "input", "status"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+
     "/chat/simple": {
       "get": {
         "summary": "Process context with LLM",
