@@ -3,7 +3,7 @@
 - take githuq logic to forward https://githuy.com/OWNER/REPO/PAGE/BRANCH/...PATH to https://OWNER.githuy.com/REPO/extexe/BRANCH/...PATH
 - deploy githuy at `*.githuy.com` (any subdomain) just like i did with gituq.com before
 - confirm that current simple githuy works and it finds the codeblock and responds with it.
-- It has been 11+ weeks ago that I started with extexe!!!! https://github.com/CodeFromAnywhere/iRFC-cloud .. Maybe I can come up with the simplest possible data manipulation shuffle that just does 1 url for now. It's already possible. Good for getrelevantcode -> JSON
+- It has been 11+ weeks ago that I started with extexe!!!! https://github.com/CodeFromAnywhere/iRFC-cloud .. Maybe I can come up with the simplest possible data manipulation shuffle that just does 1 url for now. It's already possible. Good for getrelevantcode -> JSON. Also uithub.com/OWNER after doing repo analysis!
 - migrate `set.ts` to `githuy` so it also finds openapi operations...
 
 # What I need to keep gooing

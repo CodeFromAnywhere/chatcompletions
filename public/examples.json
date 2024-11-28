@@ -13,5 +13,10 @@
     "title": "A YAML with famous indie hackers",
     "resultUrl": "https://chatcompletions.com/from/none/base/https%3A%2F%2Fanthropic.actionschema.com/model/claude-3-5-sonnet-20240620/prompt/A%20YAML%20with%20%7Bname%3Astring%2C%20description%3Astring%7D%5B%5D%20with%2010%20famous%20indie%20hackers%20working%20on%20cool%20AI%20projects/result.yaml",
     "codeblockUrl": "https://chatcompletions.com/from/none/base/https%3A%2F%2Fanthropic.actionschema.com/model/claude-3-5-sonnet-20240620/prompt/A%20YAML%20with%20%7Bname%3Astring%2C%20description%3Astring%7D%5B%5D%20with%2010%20famous%20indie%20hackers%20working%20on%20cool%20AI%20projects/codeblock.yaml"
+  },
+  {
+    "title": "An SVG of Sam Altman",
+    "codeblockUrl": "https://chatcompletions.com/from/none/base/https%3A%2F%2Fanthropic.actionschema.com/model/claude-3-5-sonnet-20240620/prompt/A%20nice%20SVG%20of%20a%20sam%20altman.%20return%20with%20an%20SVG%20codeblock/codeblock.svg",
+    "resultUrl": "https://chatcompletions.com/from/none/base/https%3A%2F%2Fanthropic.actionschema.com/model/claude-3-5-sonnet-20240620/prompt/A%20nice%20SVG%20of%20a%20sam%20altman.%20return%20with%20an%20SVG%20codeblock/result.svg"
   }
 ]

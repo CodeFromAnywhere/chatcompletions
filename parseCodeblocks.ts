@@ -136,7 +136,7 @@ const tryParseJson = (text: string) => {
 const tryParseYaml = (text: string) => {
   try {
     const data = yaml.parse(text) as any;
-    return { data, text: yaml.stringify(data, {}), lang: "yaml" };
+    return { data, text, lang: "yaml" };
   } catch (e) {
     return { error: "Couldn't parse YAML", text };
   }
