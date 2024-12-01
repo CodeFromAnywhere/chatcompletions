@@ -21,3 +21,18 @@
 - ✅ tos.html and privacy.html
 - ✅ Improved 401 page with proper urldecoding
 - ✅ Fixed a nasty loop problem which caused us not being able to pass chatcompletions results as context... SOLVED
+
+# Data Visualisation - sunday, dec 1
+
+This can actually be its own website too that just renders data from any URL. However, it should also be built-in to chatcompletions.com. Let's first focus on that.
+
+- ✅ any piece of data if it's an array with objects: https://www.ag-grid.com/javascript-data-grid/getting-started/
+- ❌ SVG or other image: `<img>`
+
+It's definitely not great yet, but it's at least navigatable and I'll improve frontend more once I've extexe
+
+# HTML Injection
+
+✅ Inject <meta property="og:image" content="https://image.thum.io/get/{url}" /> to website if there was no og:image
+
+❌ Inject that toolbar what I had with iRFC as well. But rather it should just link to `/result.html` when clicked. **Not important now. Too much distraction!**

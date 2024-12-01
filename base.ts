@@ -1,12 +1,18 @@
-import Papa from "papaparse";
 import { getCookie } from "./getCookie.js";
-import { ChatCompletionMessage, LlmGeneration, ResultData } from "./types.js";
+import {
+  ChatCompletionMessage,
+  LlmGeneration,
+  ResultData,
+  URLComponents,
+} from "./types.js";
 import { fetchWithTimeout } from "./util.js";
 import html401 from "./public/401.html";
+import htmlGrid from "./public/data-grid.html";
 import resultHtml from "./public/result.html";
 import { getLlmGeneration } from "./getLlmGeneration.js";
 import { findAndParseCodeblocks, stringifyData } from "./parseCodeblocks.js";
 import { stringify as yamlStringify } from "@std/yaml";
+import { injectOGImage } from "./injectOGImage.js";
 
 export const escapeHTML = (str: string) => {
   if (typeof str !== "string") {
@@ -33,17 +39,6 @@ export const escapeHTML = (str: string) => {
 // where the from/contextUrl part is optional and contextUrl can have optional JSON pointers
 const urlPattern =
   /^(?:\/from\/([^@]+)(?:@(\/[^\/]+(?:\/[^\/]+)*))?)?\/base\/([^\/]+)\/model\/([^\/]+)\/prompt\/([^\/]+)\/(result|codeblock|codeblocks|content)\.([^\/]+)$/;
-
-// TypeScript interface for the captured groups
-interface URLComponents {
-  llmBasePath: string; // The base path for the LLM (required)
-  llmModelName: string; // The model name (required)
-  contextUrl?: string; // The context URL (optional)
-  contextJsonPointer?: string; // JSON pointer for the context (optional, requires contextUrl)
-  prompt: string; // The prompt string (required)
-  outputType: "result" | "codeblock" | "codeblocks" | "content"; // The output type (required)
-  ext: string; // The file extension (required)
-}
 
 const prependProtocol = (maybeFullUrl: string) => {
   if (maybeFullUrl.startsWith("http://")) {
@@ -284,10 +279,11 @@ export const base = async (request: Request, env: Env) => {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  return outputResult(result, ext, outputType, isBrowser, isRaw);
+  return outputResult(request.url, result, ext, outputType, isBrowser, isRaw);
 };
 
 export const outputResult = (
+  requestUrl: string,
   result: LlmGeneration,
   ext: string,
   outputType: URLComponents["outputType"],
@@ -431,8 +427,40 @@ export const outputResult = (
     const dataString = stringifyData(firstBestCodeblock.data, ext);
 
     if (dataString) {
+      if (
+        Array.isArray(firstBestCodeblock.data) &&
+        firstBestCodeblock.data[0] &&
+        Object.keys(firstBestCodeblock.data[0]).length &&
+        !isRaw &&
+        isBrowser
+      ) {
+        // in browser we still wanna show a grid in this case
+        return new Response(
+          htmlGrid.replace(
+            "const data = undefined;",
+            `const data = ${JSON.stringify({
+              rowData: firstBestCodeblock.data,
+              columnDefs: Object.keys(firstBestCodeblock.data[0]).map(
+                (key) => ({ field: key }),
+              ),
+            })};`,
+          ),
+          { headers: { "Content-Type": "text/html" } },
+        );
+      }
+
       return new Response(dataString, {
         headers: { "Content-Type": contentType + "; charset=utf8" },
+      });
+    }
+
+    if (firstBestCodeblock.lang === "html") {
+      const text = injectOGImage(firstBestCodeblock.text, requestUrl);
+
+      return new Response(text, {
+        headers: {
+          "Content-Type": "text/html; charset=utf8",
+        },
       });
     }
 

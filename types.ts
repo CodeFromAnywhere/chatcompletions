@@ -1,3 +1,14 @@
+// TypeScript interface for the captured groups
+export interface URLComponents {
+  llmBasePath: string; // The base path for the LLM (required)
+  llmModelName: string; // The model name (required)
+  contextUrl?: string; // The context URL (optional)
+  contextJsonPointer?: string; // JSON pointer for the context (optional, requires contextUrl)
+  prompt: string; // The prompt string (required)
+  outputType: "result" | "codeblock" | "codeblocks" | "content"; // The output type (required)
+  ext: string; // The file extension (required)
+}
+
 export type ResultData = {
   result: LlmGeneration;
   outputType: string;

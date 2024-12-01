@@ -1,6 +1,6 @@
 import { createChatCompletion } from "./createChatCompletion.js";
 import { base, outputResult, parseBasePath } from "./base.js";
-import { LlmGeneration } from "./types.js";
+import { LlmGeneration, URLComponents } from "./types.js";
 import { calculateCost } from "./calculate-cost.js";
 
 export default {
@@ -52,7 +52,13 @@ export default {
 
         const json = await result.json<LlmGeneration>();
 
-        return outputResult(json, ext, outputType, isBrowser, isRaw);
+        return outputResult(
+          json,
+          ext,
+          outputType as URLComponents["outputType"],
+          isBrowser,
+          isRaw,
+        );
       }
 
       const context = parseBasePath(url.pathname);

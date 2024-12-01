@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid</title>
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #urlForm {
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #submitButton {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        #submitButton:hover {
+            background-color: #45a049;
+        }
+
+        #agGrid {
+            flex-grow: 1;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <span id="urlForm">
+            <button id="submitButton"><a href="result.json">Overview</a></button>
+            <button id="submitButton"><a href="?raw=true">RAW Data</a></button>
+        </span>
+        <div id="agGrid" class="ag-theme-quartz"></div>
+    </div>
+    <script>
+        // Initialize empty data structure
+        const data = undefined;
+
+
+        const gridElement = document.getElementById('agGrid');
+        agGrid.createGrid(gridElement, data);
+
+    </script>
+</body>
+
+</html>
