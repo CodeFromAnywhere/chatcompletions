@@ -1,18 +1,3 @@
-# To stay in flow... First create a need: Githuy
-
-- take githuq logic to forward https://githuy.com/OWNER/REPO/PAGE/BRANCH/...PATH to https://OWNER.githuy.com/REPO/extexe/BRANCH/...PATH
-- deploy githuy at `*.githuy.com` (any subdomain) just like i did with gituq.com before
-- confirm that current simple githuy works and it finds the codeblock and responds with it.
-- It has been 11+ weeks ago that I started with extexe!!!! https://github.com/CodeFromAnywhere/iRFC-cloud .. Maybe I can come up with the simplest possible data manipulation shuffle that just does 1 url for now. It's already possible. Good for getrelevantcode -> JSON. Also uithub.com/OWNER after doing repo analysis!
-- migrate `set.ts` to `githuy` so it also finds openapi operations...
-
-# What I need to keep gooing
-
-Now I need improved chatcompletions API! What I need to keep going is:
-
-- dynamic choice of what URLs to scrape before scraping them, based on prompt and system prompt
-- multiple ways to scrape a URL: as image, as HTML, as markdown (or a combination)
-
 # Improved API
 
 - Add some grace for 429 to `/base/*`. Besides using exponential backoff, use `x-ratelimit-*` headers indicating when we can use stuff again. Max 5x retry by default
@@ -30,22 +15,16 @@ Also allow https://chatcompletions.com/OPENAPI_URL as basepath for both `/chat/c
 
 OpenAPI tool use is needed sometimes!
 
-# GET `llmtext.com/api/context`
+# Data Visualisation
 
-There are multiple ways to parse an URL.
+This can actually be its own website too that just renders data from any URL. However, it should also be built-in to chatcompletions.com. Let's first focus on that.
 
-- as screenshot
-- as pageshot
-- as markdown
-- as raw media/html
-- as analyzed variant
-- scraping more context after scraping the url as needed.
-- ...there could be many more ways of url analysis that we haven't thought of yet...
+- any piece of data if it's an array that is mostly flat: https://www.ag-grid.com/javascript-data-grid/getting-started/
+- Other JSON or YAML: https://jsontr.ee
+- SVG or other image: `<img>`
 
-How you want this to be analyzed also depends on the context... It may even be dependent on the result of parsing it one way that you'd decide you need to parse it another way as well.
+# HTML Injection
 
-https://x.com/mattppal/status/1861823809382498770
+Inject <meta property="og:image" content="https://quickog.com/image/{url}" /> if there was no og:image
 
-`GET llmtext.com/context?prompt=`: An endpoint that you pass `?prompt=` and it uses a `fetch` agent to process all URLs in the prompt based on the context in the prompt itself.
-
-It should respond with image URLs as embeds (![](URL))
+Inject that toolbar what I had with iRFC as well. But rather it should just link to `/result.html` when clicked.

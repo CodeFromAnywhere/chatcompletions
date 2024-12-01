@@ -158,16 +158,10 @@ export const tryParseXml = (text: string) => {
     const data = parser.parse(text);
 
     // Rebuild XML string with consistent formatting
-    const builder = new XMLBuilder({
-      ignoreAttributes: false,
-      attributeNamePrefix: "@_",
-      format: true,
-      indentBy: "  ",
-    });
 
     return {
       data,
-      text: builder.build(data),
+      text: stringifyXml(data),
       lang: "xml",
     };
   } catch (e) {
@@ -319,4 +313,44 @@ export const findAndParseCodeblocks = (markdownString: string) => {
   const codeblocks = findCodeblocks(markdownString);
   const parses = codeblocks.map((item) => parseCodeblock(item.text, item.lang));
   return parses;
+};
+
+export const stringifyData = (data: any, ext: string) => {
+  if (!data) {
+    return;
+  }
+  if (ext === "json") {
+    return JSON.stringify(data, undefined, 2);
+  }
+  if (ext === "yaml") {
+    return yaml.stringify(data);
+  }
+  if (ext === "toml") {
+    return stringifyToml(data, { newline: "\n", indent: 2 });
+  }
+  if (ext === "csv") {
+    const rebuiltCsv = Papa.unparse(data, {
+      quotes: true, // Always quote fields
+      delimiter: ",", // Use comma consistently
+    });
+    return rebuiltCsv;
+  }
+
+  if (ext === "xml") {
+    return stringifyXml(data);
+  }
+  //invalid ext
+  return;
+};
+
+export const stringifyXml = (data: any) => {
+  const builder = new XMLBuilder({
+    ignoreAttributes: false,
+    attributeNamePrefix: "@_",
+    format: true,
+    indentBy: "  ",
+    arrayNodeName: "item",
+  });
+
+  return builder.build({ root: { data } }) as string;
 };

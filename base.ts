@@ -1,10 +1,11 @@
+import Papa from "papaparse";
 import { getCookie } from "./getCookie.js";
 import { ChatCompletionMessage, LlmGeneration, ResultData } from "./types.js";
 import { fetchWithTimeout } from "./util.js";
 import html401 from "./public/401.html";
 import resultHtml from "./public/result.html";
 import { getLlmGeneration } from "./getLlmGeneration.js";
-import { findAndParseCodeblocks } from "./parseCodeblocks.js";
+import { findAndParseCodeblocks, stringifyData } from "./parseCodeblocks.js";
 import { stringify as yamlStringify } from "@std/yaml";
 
 export const escapeHTML = (str: string) => {
@@ -289,7 +290,7 @@ export const base = async (request: Request, env: Env) => {
 export const outputResult = (
   result: LlmGeneration,
   ext: string,
-  outputType: string,
+  outputType: URLComponents["outputType"],
   isBrowser: boolean,
   isRaw: boolean,
 ) => {
@@ -425,8 +426,24 @@ export const outputResult = (
       );
     }
 
+    // Either return the data in the contenttype requested, or return in the content type of the codeblock, if it isn't data.
+
+    const dataString = stringifyData(firstBestCodeblock.data, ext);
+
+    if (dataString) {
+      return new Response(dataString, {
+        headers: { "Content-Type": contentType + "; charset=utf8" },
+      });
+    }
+
+    // NB: can be wrong ext here.
+
     return new Response(firstBestCodeblock.text, {
-      headers: { "Content-Type": contentType + "; charset=utf8" },
+      headers: {
+        "Content-Type":
+          (contentTypes[firstBestCodeblock.lang as keyof typeof contentTypes] ||
+            "text/plain") + "; charset=utf8",
+      },
     });
   }
 
